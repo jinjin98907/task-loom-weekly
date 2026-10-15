@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Fragment, useEffect, useMemo, useState } from "react";
 
 import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
-import { hasPeriod, periodsOn } from "@/lib/timetable-periods";
+import { hasPeriod } from "@/lib/timetable-periods";
 
 export const Route = createFileRoute("/yearly")({
   head: () => ({
