@@ -42,16 +42,18 @@ function Dashboard() {
   }, []);
   useEffect(() => { if (loaded) localStorage.setItem(KEY, JSON.stringify(store)); }, [store, loaded]);
 
-  const days = useMemo(() => Array.from({ length: showWeekend ? 7 : 5 }, (_, i) => {
-    const d = new Date(monday); d.setDate(d.getDate() + i); return d;
-  }), [monday, showWeekend]);
+  const weeks = useMemo(() => Array.from({ length: 4 }, (_, w) => Array.from({ length: showWeekend ? 7 : 5 }, (_, i) => {
+    const d = new Date(monday); d.setDate(d.getDate() + w * 7 + i); return d;
+  })), [monday, showWeekend]);
+  const days = weeks[0]!;
+  const lastWeek = weeks[3]!;
   const todayKey = keyOf(new Date());
 
   const get = (k: string) => store[k] ?? emptyDay();
   const update = (k: string, fn: (d: DayData) => DayData) => setStore((s) => ({ ...s, [k]: fn(s[k] ?? emptyDay()) }));
   const shift = (w: number) => { const d = new Date(monday); d.setDate(d.getDate() + w * 7); setMonday(d); };
 
-  const end = days[days.length - 1] ?? monday;
+  const end = lastWeek[lastWeek.length - 1] ?? monday;
   const cols = `120px repeat(${days.length}, minmax(0, 1fr))`;
 
   return (
@@ -74,13 +76,19 @@ function Dashboard() {
         </div>
       </header>
 
+      <div className="space-y-6">
+      {weeks.map((days, wi) => (
+      <section key={wi}>
+        <h2 className="mb-2 font-display text-lg text-secondary-foreground">
+          {wi === 0 ? "📌 " : ""}{days[0]!.getMonth() + 1}월 {days[0]!.getDate()}일 주간
+        </h2>
       <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="grid border-b bg-sky-soft" style={{ gridTemplateColumns: cols }}>
-          <div className="p-3" />
+          <div className="p-2" />
           {days.map((d) => {
             const isToday = keyOf(d) === todayKey;
             return (
-              <div key={keyOf(d)} className={`border-l p-3 text-center font-display text-lg ${isToday ? "bg-sky-strong text-primary-foreground" : "text-foreground"}`}>
+              <div key={keyOf(d)} className={`border-l p-2 text-center font-display text-base ${isToday ? "bg-sky-strong text-primary-foreground" : "text-foreground"}`}>
                 {d.getMonth() + 1}월 {d.getDate()}일 ({DAYS[d.getDay()]})
               </div>
             );
@@ -100,7 +108,7 @@ function Dashboard() {
                 value={get(k).notice}
                 onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, notice: v })); }}
                 placeholder={"체험학습: \n결석/지각: \n전달사항: "}
-                className="min-h-28 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/50 p-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
+                className="min-h-16 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/50 p-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
               />
             </Cell>
           ); })}
@@ -114,12 +122,15 @@ function Dashboard() {
                   value={v}
                   onChange={(e) => { const val = e.target.value; update(k, (x) => { const ps = [...x.periods]; ps[p] = val; return { ...x, periods: ps }; }); }}
                   placeholder="과목"
-                  className={`w-full rounded-xl px-3 py-2 text-center font-semibold outline-none transition focus:ring-2 focus:ring-ring ${v ? "bg-sky-mid text-secondary-foreground" : "bg-muted text-muted-foreground"}`}
+                  className={`w-full rounded-lg px-2 py-1 text-center text-sm font-semibold outline-none transition focus:ring-2 focus:ring-ring ${v ? "bg-sky-mid text-secondary-foreground" : "bg-muted text-muted-foreground"}`}
                 />
               </Cell>
             ); })}
           </Row>
         ))}
+      </div>
+      </section>
+      ))}
       </div>
     </div>
   );
