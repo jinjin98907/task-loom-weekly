@@ -203,7 +203,7 @@ function Yearly() {
                     {cur && <span className="mt-0.5 block rounded bg-primary/10 text-[10px] font-semibold text-primary">이번 주</span>}
                   </th>
                   {w.map((d) => (
-                    <th key={keyOf(d)} colSpan={PERIODS} className={`border px-1 py-0.5 font-semibold ${inRange(d) ? "text-secondary-foreground" : "text-muted-foreground/50"} ${keyOf(d) === keyOf(today) ? "bg-sky-mid" : isLongDay(d) ? "bg-sky-mid/55" : ""}`}>
+                    <th key={keyOf(d)} colSpan={PERIODS} className={`border px-1 py-0.5 font-semibold ${inRange(d) ? "text-secondary-foreground" : "text-muted-foreground/50"} ${keyOf(d) === keyOf(today) ? "bg-sky-mid/60" : isLongDay(d) ? "bg-sky-mid/55" : ""}`}>
                       {d.getMonth() + 1}월 {d.getDate()}일 {DOW[d.getDay()]}
                       {keyOf(d) === keyOf(today) && <span className="ml-1 rounded bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground">오늘</span>}
                     </th>
@@ -359,7 +359,7 @@ function WeekCards({ today, cells, rules, setCell, onMenu }: {
                 <th className="border px-1 py-1 font-semibold text-primary">{cls}</th>
                 {days.map((d) => {
                   const t = keyOf(d) === keyOf(today);
-                  return <th key={keyOf(d)} className={`border px-1 py-1 font-semibold text-secondary-foreground ${t ? "bg-sky-mid" : ""}`}>{DOW[d.getDay()]}<span className="ml-0.5 font-normal opacity-70">{d.getDate()}</span></th>;
+                  return <th key={keyOf(d)} className={`border px-1 py-1 font-semibold text-secondary-foreground ${t ? "bg-sky-mid/60" : ""}`}>{DOW[d.getDay()]}<span className="ml-0.5 font-normal opacity-70">{d.getDate()}</span></th>;
                 })}
               </tr>
             </thead>
