@@ -3,6 +3,7 @@ import { AppTabs } from "@/components/AppTabs";
 import { useEffect, useMemo, useState } from "react";
 import { AttendanceAI } from "@/components/AttendanceAI";
 import { type Attendance, emptyAttendance, normalizeAttendance } from "@/lib/attendance";
+import { normalizeRules, styleFor, type ColorRule } from "@/lib/keyword-colors";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/")({
 });
 
 type Todo = { id: string; text: string; done: boolean; tag?: "important" | "deadline" };
-type DayData = { todos: Todo[]; notice: string; attendance: Attendance; periods: string[] };
+type DayData = { todos: Todo[]; notice: string; attendance: Attendance; periods: string[]; details?: string[] };
 type Store = Record<string, DayData>;
 
 const KEY = "teacher-dashboard-v1";
@@ -38,9 +39,11 @@ function Dashboard() {
   const [loaded, setLoaded] = useState(false);
   const [monday, setMonday] = useState(() => mondayOf(new Date()));
   const [showWeekend, setShowWeekend] = useState(false);
+  const [rules, setRules] = useState<ColorRule[]>([]);
 
   useEffect(() => {
     try { setStore(JSON.parse(localStorage.getItem(KEY) || "{}")); } catch {}
+    try { setRules(normalizeRules(JSON.parse(localStorage.getItem("teacher-yearly-color-rules-v1") || "[]"))); } catch {}
     setLoaded(true);
   }, []);
   useEffect(() => { if (loaded) localStorage.setItem(KEY, JSON.stringify(store)); }, [store, loaded]);
@@ -186,14 +189,25 @@ function Dashboard() {
 
         {[0, 1, 2, 3, 4, 5].map((p) => (
           <Row key={p} label={`${p + 1}교시`} cols={cols}>
-            {days.map((d) => { const k = keyOf(d); const v = get(k).periods[p]; return (
+            {days.map((d) => { const k = keyOf(d); const v = get(k).periods[p] ?? ""; const det = get(k).details?.[p] ?? ""; const st = styleFor(v, rules); return (
               <Cell key={k} today={k === todayKey}>
-                <input
-                  value={v}
-                  onChange={(e) => { const val = e.target.value; update(k, (x) => { const ps = [...x.periods]; ps[p] = val; return { ...x, periods: ps }; }); }}
-                  placeholder="과목"
-                  className={`w-full rounded-lg px-2 py-1 text-center text-sm font-semibold outline-none transition focus:ring-2 focus:ring-ring ${v ? "bg-sky-mid text-secondary-foreground" : "bg-muted text-muted-foreground"}`}
-                />
+                <div className="flex overflow-hidden rounded-lg border border-sky-mid/70">
+                  <input
+                    value={v}
+                    onChange={(e) => { const val = e.target.value; update(k, (x) => { const ps = [...x.periods]; ps[p] = val; return { ...x, periods: ps }; }); }}
+                    placeholder="과목"
+                    style={{ flex: 1, color: st.color, background: st.background }}
+                    className={`min-w-0 border-r border-sky-mid/70 px-1 py-1 text-center text-xs font-semibold outline-none focus:ring-2 focus:ring-inset focus:ring-ring ${st.background ? "" : "bg-sky-soft"} ${v ? "" : "text-muted-foreground"}`}
+                  />
+                  <textarea
+                    value={det}
+                    rows={Math.max(1, det.split("\n").length)}
+                    onChange={(e) => { const val = e.target.value; update(k, (x) => { const ds = [...(x.details ?? ["", "", "", "", "", ""])]; ds[p] = val; return { ...x, details: ds }; }); }}
+                    placeholder="수업 내용·준비물·메모"
+                    style={{ flex: 5 }}
+                    className="min-w-0 resize-none bg-card px-1.5 py-1 text-xs leading-snug text-foreground outline-none placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-inset focus:ring-ring"
+                  />
+                </div>
               </Cell>
             ); })}
           </Row>
