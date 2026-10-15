@@ -203,7 +203,7 @@ function Yearly() {
                   {Array.from({ length: COLS }, (_, i) => {
                     const d = w[Math.floor(i / PERIODS)]!;
                     const on = inRange(d) && hasPeriod(d, i % PERIODS);
-                    return <th key={i} className={`border font-normal ${on ? "" : "text-muted-foreground/40"}`}>{(i % PERIODS) + 1}</th>;
+                    return <th key={i} className={`border font-normal ${on ? "text-secondary-foreground" : "text-muted-foreground/40"}`}>{(i % PERIODS) + 1}</th>;
                   })}
                 </tr>
               </thead>
