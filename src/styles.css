@@ -32,6 +32,7 @@
   --color-sky-mid: var(--sky-mid);
   --color-sky-strong: var(--sky-strong);
   --color-today: var(--today);
+  --color-day-alt: var(--day-alt);
   --font-sans: "Gowun Dodum", "Pretendard", sans-serif;
   --font-display: "Jua", sans-serif;
 }
@@ -60,7 +61,8 @@
   --sky-soft: oklch(0.947 0.018 234);
   --sky-mid: oklch(0.87 0.042 234);
   --sky-strong: oklch(0.64 0.085 236);
-  --today: oklch(0.96 0.016 234);
+  --day-alt: oklch(0.975 0.014 236);
+  --today: oklch(0.945 0.032 236);
 }
 
 @layer base {
