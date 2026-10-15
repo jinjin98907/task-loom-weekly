@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { AppTabs } from "@/components/AppTabs";
 import { Fragment, useEffect, useMemo, useState } from "react";
 
 import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
@@ -142,9 +143,10 @@ function Yearly() {
 
   return (
     <div className="min-h-screen bg-background p-4">
+      <AppTabs />
       <header className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Link to="/" className="rounded-lg border border-sky-mid bg-card px-3 py-1.5 text-sm text-secondary-foreground hover:bg-sky-soft">← 주간 대시보드</Link>
+          
           <h1 className="font-display text-2xl text-foreground">📅 학년 전체 시간표 (2026학년도)</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
