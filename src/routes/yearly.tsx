@@ -150,15 +150,16 @@ function Yearly() {
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <Btn onClick={downloadTemplate}>📄 엑셀 양식 다운로드</Btn>
           <Btn onClick={() => setBulk(true)}>📋 일괄 붙여넣기</Btn>
-          <Btn onClick={() => dl(new Blob([JSON.stringify(cells, null, 2)], { type: "application/json" }), `학년시간표-백업-${keyOf(new Date())}.json`)}>💾 데이터 전체 백업</Btn>
+          <Btn onClick={() => setRulesOpen(true)}>🎨 단어 색상 규칙</Btn>
+          <Btn onClick={() => dl(new Blob([JSON.stringify({ v: 2, cells, rules }, null, 2)], { type: "application/json" }), `학년시간표-백업-${keyOf(new Date())}.json`)}>💾 데이터 전체 백업</Btn>
           <label className="cursor-pointer rounded-lg border border-sky-mid bg-sky-soft px-3 py-1.5 font-semibold text-secondary-foreground hover:bg-sky-mid">
             📂 데이터 불러오기
             <input type="file" accept=".json,application/json" className="hidden" onChange={async (e) => {
               const f = e.target.files?.[0]; e.target.value = ""; if (!f) return;
               try {
-                const d = JSON.parse(await f.text());
-                if (typeof d !== "object" || !d || Array.isArray(d)) throw 0;
-                if (confirm("현재 학년 시간표를 파일 내용으로 바꿀까요?")) setCells(d);
+                const parsed = parseBackup(JSON.parse(await f.text()));
+                if (!parsed) throw 0;
+                if (confirm("현재 학년 시간표를 파일 내용으로 바꿀까요?")) { setCells(parsed.cells as Cells); setRules(parsed.rules); }
               } catch { alert("올바른 백업 파일이 아니에요."); }
             }} />
           </label>
@@ -223,7 +224,7 @@ function Yearly() {
                       if (!inRange(d) || !hasPeriod(d, col % PERIODS)) return <td key={col} className="border cell-off" />;
                       const k = ck(d, ci, col % PERIODS);
                       const c = cells[k];
-                      const st = { ...autoStyle(c?.t ?? ""), ...(c?.c ? { color: c.c } : {}), ...(c?.b ? { background: c.b } : {}) };
+                      const st = { ...styleFor(c?.t ?? "", rules), ...(c?.c ? { color: c.c } : {}), ...(c?.b ? { background: c.b } : {}) };
                       return (
                         <td key={col} className={`border p-0 ${col % PERIODS === 0 ? (keyOf(d) === keyOf(today) ? "border-l-2 border-l-primary" : "border-l-2 border-l-sky-mid") : ""} ${keyOf(d) === keyOf(today) ? "bg-today" : isLongDay(d) ? "bg-day-alt" : ""}`} style={{ background: st.background }}>
                           <input
