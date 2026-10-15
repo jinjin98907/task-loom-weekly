@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+
+import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
 
 export const Route = createFileRoute("/yearly")({
   head: () => ({
@@ -55,7 +57,8 @@ function weeksOf(start: Date, end: Date) {
 function Yearly() {
   const [cells, setCells] = useState<Cells>({});
   const [loaded, setLoaded] = useState(false);
-  const [sem, setSem] = useState(0);
+  const [sem, setSem] = useState<number | null>(null);
+  const [today] = useState(() => new Date());
   const [menu, setMenu] = useState<{ x: number; y: number; k: string } | null>(null);
   const [bulk, setBulk] = useState(false);
   const [bulkText, setBulkText] = useState("");
@@ -71,24 +74,34 @@ function Yearly() {
     return () => window.removeEventListener("click", close);
   }, []);
 
-  const S = SEMS[sem]!;
+  const semOrder = useMemo(() => orderSemesters(SEMS, today), [today]);
+  const semIdx = sem ?? semOrder[0]!;
+  const S = SEMS[semIdx]!;
   const weeks = useMemo(() => weeksOf(S.start, S.end), [S]);
+  // 화면에 보이는 순서: 이번 주가 맨 위, 지난 주는 맨 아래
+  const ordered = useMemo(() => orderWeeks(weeks, today), [weeks, today]);
+  const weekNum = useMemo(() => {
+    const m = new Map<string, number>();
+    weeks.forEach((w, i) => m.set(keyOf(w[0]!), i + 1));
+    return m;
+  }, [weeks]);
   const inRange = (d: Date) => d >= S.start && d <= S.end;
   const ck = (d: Date, cls: number, p: number) => `${keyOf(d)}|${cls}|${p}`;
-  // global grid coordinate -> cell key
-  const keyAt = (row: number, col: number) => {
-    const w = weeks[Math.floor(row / 3)]; if (!w || col < 0 || col >= COLS) return null;
+  // global grid coordinate -> cell key (list: 화면 순서 또는 학기 chronological 순서)
+  const keyAtIn = (list: Date[][], row: number, col: number) => {
+    const w = list[Math.floor(row / 3)]; if (!w || col < 0 || col >= COLS) return null;
     const d = w[Math.floor(col / PERIODS)]!;
     if (!inRange(d)) return null;
     return ck(d, row % 3, col % PERIODS);
   };
+  const keyAt = (row: number, col: number) => keyAtIn(ordered, row, col);
 
-  const pasteGrid = (text: string, row: number, col: number) => {
+  const pasteGrid = (text: string, row: number, col: number, list: Date[][] = ordered) => {
     const rows = text.replace(/\r/g, "").replace(/\n$/, "").split("\n").map((r) => r.split("\t"));
     setCells((s) => {
       const n = { ...s };
       rows.forEach((r, i) => r.forEach((v, j) => {
-        const k = keyAt(row + i, col + j); if (!k) return;
+        const k = keyAtIn(list, row + i, col + j); if (!k) return;
         n[k] = { ...n[k], t: v.trim() };
       }));
       return n;
@@ -114,7 +127,7 @@ function Yearly() {
     let rows = bulkText.replace(/\r/g, "").split("\n").filter((r) => r.trim() !== "");
     if (rows[0]?.startsWith("주")) rows = rows.slice(1);
     const stripped = rows.map((r) => { const c = r.split("\t"); return /^\d{4}-\d{2}-\d{2}$/.test(c[0]?.trim() ?? "") ? c.slice(2) : c; });
-    pasteGrid(stripped.map((c) => c.join("\t")).join("\n"), 0, 0);
+    pasteGrid(stripped.map((c) => c.join("\t")).join("\n"), 0, 0, weeks);
     setBulk(false); setBulkText("");
   };
 
