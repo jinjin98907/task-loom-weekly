@@ -68,6 +68,13 @@ function Yearly() {
     try { setCells(JSON.parse(localStorage.getItem(KEY) || "{}")); } catch {}
     try { setRules(normalizeRules(JSON.parse(localStorage.getItem(RULES_KEY) || "[]"))); } catch {}
     setLoaded(true);
+    // 다른 창/탭(주간 대시보드)에서 과목을 고치면 즉시 반영
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === KEY) { try { setCells(JSON.parse(e.newValue || "{}")); } catch {} }
+      if (e.key === RULES_KEY) { try { setRules(normalizeRules(JSON.parse(e.newValue || "[]"))); } catch {} }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
   useEffect(() => { if (loaded) localStorage.setItem(KEY, JSON.stringify(cells)); }, [cells, loaded]);
   useEffect(() => { if (loaded) localStorage.setItem(RULES_KEY, JSON.stringify(rules)); }, [rules, loaded]);
