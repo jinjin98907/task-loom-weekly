@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { summarizeAttendance } from "@/lib/attendance-summary.functions";
 
-type Rec = { date: string; absent: string; late: string };
+type Rec = { date: string; absent: string; late: string; trip: string };
 
 export function AttendanceAI({ records }: { records: Rec[] }) {
   const [open, setOpen] = useState(false);

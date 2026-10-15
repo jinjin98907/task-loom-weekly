@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-type Input = { question: string; records: { date: string; absent: string; late: string }[] };
+type Input = { question: string; records: { date: string; absent?: string; late?: string; trip?: string }[] };
 
 export const summarizeAttendance = createServerFn({ method: "POST" })
   .inputValidator((d: Input) => {
@@ -11,10 +11,11 @@ export const summarizeAttendance = createServerFn({ method: "POST" })
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) return { ok: false as const, error: "AI 설정이 되어 있지 않아요." };
     const lines = data.records
-      .filter((r) => r.absent.trim() || r.late.trim())
-      .map((r) => `- ${r.date} | 결석: ${r.absent.trim() || "없음"} | 지각: ${r.late.trim() || "없음"}`)
+      .map((r) => ({ date: r.date, absent: (r.absent ?? "").trim(), late: (r.late ?? "").trim(), trip: (r.trip ?? "").trim() }))
+      .filter((r) => r.absent || r.late || r.trip)
+      .map((r) => `- ${r.date} | 결석: ${r.absent || "없음"} | 지각: ${r.late || "없음"} | 교외 체험학습: ${r.trip || "없음"}`)
       .join("\n");
-    const prompt = `다음은 초등학교 학급의 날짜별 출결 기록입니다 (화면에 보이는 4주).\n${lines || "(기록 없음)"}\n\n교사의 질문: ${data.question || "날짜별 결석·지각 현황과 핵심 사항을 요약해 주세요."}\n\n한국어로 간결하게 답하세요. 날짜별 현황, 반복 결석·지각 학생 등 주의할 점을 짧은 글머리표로 정리하고, 기록에 없는 내용은 지어내지 마세요.`;
+    const prompt = `다음은 초등학교 학급의 날짜별 출결 기록입니다 (화면에 보이는 4주).\n${lines || "(기록 없음)"}\n\n교사의 질문: ${data.question || "날짜별 결석·지각·교외 체험학습 현황과 핵심 사항을 요약해 주세요."}\n\n한국어로 간결하게 답하세요. 날짜별 현황, 반복 결석·지각 학생 등 주의할 점을 짧은 글머리표로 정리하고, 기록에 없는 내용은 지어내지 마세요.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",

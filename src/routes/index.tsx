@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AttendanceAI } from "@/components/AttendanceAI";
+import { type Attendance, emptyAttendance, normalizeAttendance } from "@/lib/attendance";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,13 +18,12 @@ export const Route = createFileRoute("/")({
 });
 
 type Todo = { id: string; text: string; done: boolean };
-type Attendance = { absent: string; late: string };
 type DayData = { todos: Todo[]; notice: string; attendance: Attendance; periods: string[] };
 type Store = Record<string, DayData>;
 
 const KEY = "teacher-dashboard-v1";
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
-const emptyDay = (): DayData => ({ todos: [], notice: "", attendance: { absent: "", late: "" }, periods: ["", "", "", "", "", ""] });
+const emptyDay = (): DayData => ({ todos: [], notice: "", attendance: emptyAttendance(), periods: ["", "", "", "", "", ""] });
 const keyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const mondayOf = (d: Date) => {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -54,7 +54,7 @@ function Dashboard() {
   const get = (k: string): DayData => {
     const d = store[k];
     if (!d) return emptyDay();
-    return { ...emptyDay(), ...d, attendance: { ...emptyDay().attendance, ...d.attendance } };
+    return { ...emptyDay(), ...d, attendance: normalizeAttendance(d.attendance) };
   };
   const update = (k: string, fn: (d: DayData) => DayData) => setStore((s) => ({ ...s, [k]: fn(s[k] ?? emptyDay()) }));
   const shift = (w: number) => { const d = new Date(monday); d.setDate(d.getDate() + w * 7); setMonday(d); };
@@ -104,7 +104,7 @@ function Dashboard() {
         </div>
       </header>
 
-      <AttendanceAI records={weeks.flat().map((d) => { const a = get(keyOf(d)).attendance; return { date: `${d.getMonth() + 1}월 ${d.getDate()}일(${"일월화수목금토"[d.getDay()]})`, absent: a.absent, late: a.late }; })} />
+      <AttendanceAI records={weeks.flat().map((d) => { const a = get(keyOf(d)).attendance; return { date: `${d.getMonth() + 1}월 ${d.getDate()}일(${"일월화수목금토"[d.getDay()]})`, absent: a.absent, late: a.late, trip: a.trip }; })} />
 
       <div className="space-y-6">
       {weeks.map((days, wi) => (
@@ -163,6 +163,16 @@ function Dashboard() {
                   <textarea
                     value={a.late}
                     onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, late: v } })); }}
+                    placeholder="이름 입력"
+                    rows={1}
+                    className="min-h-8 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-[11px] font-semibold text-primary">교외 체험학습</span>
+                  <textarea
+                    value={a.trip}
+                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, trip: v } })); }}
                     placeholder="이름 입력"
                     rows={1}
                     className="min-h-8 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
