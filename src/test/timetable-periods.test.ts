@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hasPeriod, periodsOn } from "@/lib/timetable-periods";
+import { hasPeriod, isLongDay, periodsOn } from "@/lib/timetable-periods";
 
 const day = (y: number, m: number, d: number) => new Date(y, m - 1, d);
 // 2026-10-12(월) ~ 2026-10-16(금)
@@ -33,5 +33,9 @@ describe("요일별 교시 수", () => {
   it("주말에는 교시가 없다", () => {
     expect(periodsOn(day(2026, 10, 17))).toBe(0); // 토
     expect(periodsOn(day(2026, 10, 18))).toBe(0); // 일
+  });
+
+  it("6교시 날(화·목)을 월·수·금과 구분한다", () => {
+    expect([MON, TUE, WED, THU, FRI].map(isLongDay)).toEqual([false, true, false, true, false]);
   });
 });

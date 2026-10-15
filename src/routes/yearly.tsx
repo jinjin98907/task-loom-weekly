@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Fragment, useEffect, useMemo, useState } from "react";
 
 import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
-import { hasPeriod } from "@/lib/timetable-periods";
+import { hasPeriod, isLongDay } from "@/lib/timetable-periods";
 
 export const Route = createFileRoute("/yearly")({
   head: () => ({
@@ -193,8 +193,9 @@ function Yearly() {
                     {cur && <span className="mt-0.5 block rounded bg-primary/10 text-[10px] font-semibold text-primary">이번 주</span>}
                   </th>
                   {w.map((d) => (
-                    <th key={keyOf(d)} colSpan={PERIODS} className={`border px-1 py-0.5 font-semibold ${inRange(d) ? "text-secondary-foreground" : "text-muted-foreground/50"} ${keyOf(d) === keyOf(today) ? "bg-sky-mid" : ""}`}>
+                    <th key={keyOf(d)} colSpan={PERIODS} className={`border px-1 py-0.5 font-semibold ${inRange(d) ? "text-secondary-foreground" : "text-muted-foreground/50"} ${keyOf(d) === keyOf(today) ? "bg-sky-mid" : isLongDay(d) ? "bg-sky-mid/55" : ""}`}>
                       {d.getMonth() + 1}월 {d.getDate()}일 {DOW[d.getDay()]}
+                      {keyOf(d) === keyOf(today) && <span className="ml-1 rounded bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground">오늘</span>}
                     </th>
                   ))}
                 </tr>
@@ -203,7 +204,7 @@ function Yearly() {
                   {Array.from({ length: COLS }, (_, i) => {
                     const d = w[Math.floor(i / PERIODS)]!;
                     const on = inRange(d) && hasPeriod(d, i % PERIODS);
-                    return <th key={i} className={`border font-normal ${on ? "text-secondary-foreground" : "text-muted-foreground/40"}`}>{(i % PERIODS) + 1}</th>;
+                    return <th key={i} className={`border font-normal ${on ? "text-secondary-foreground" : "text-muted-foreground/40"} ${keyOf(d) === keyOf(today) ? "bg-today" : isLongDay(d) ? "bg-day-alt" : ""}`}>{(i % PERIODS) + 1}</th>;
                   })}
                 </tr>
               </thead>
@@ -218,7 +219,7 @@ function Yearly() {
                       const c = cells[k];
                       const st = { ...autoStyle(c?.t ?? ""), ...(c?.c ? { color: c.c } : {}), ...(c?.b ? { background: c.b } : {}) };
                       return (
-                        <td key={col} className={`border p-0 ${col % PERIODS === 0 ? "border-l-2 border-l-sky-mid" : ""}`} style={{ background: st.background }}>
+                        <td key={col} className={`border p-0 ${col % PERIODS === 0 ? (keyOf(d) === keyOf(today) ? "border-l-2 border-l-primary" : "border-l-2 border-l-sky-mid") : ""} ${keyOf(d) === keyOf(today) ? "bg-today" : isLongDay(d) ? "bg-day-alt" : ""}`} style={{ background: st.background }}>
                           <input
                             value={c?.t ?? ""}
                             onChange={(e) => setCell(k, { t: e.target.value })}
