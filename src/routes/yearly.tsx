@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { AppTabs } from "@/components/AppTabs";
 import { Fragment, useEffect, useMemo, useState } from "react";
 
 import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
@@ -142,6 +143,7 @@ function Yearly() {
 
   return (
     <div className="min-h-screen bg-background p-4">
+      <AppTabs />
       <header className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           

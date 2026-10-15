@@ -252,7 +252,7 @@ function TodoCell({ data, onChange }: { data: DayData; onChange: (fn: (d: DayDat
               className="flex-1 resize-none rounded border border-input p-1 text-sm outline-none" />
           ) : (
             <p onDoubleClick={() => { setEditing(t.id); setEditText(t.text); }}
-              className={`flex-1 cursor-text whitespace-pre-wrap break-words text-sm leading-snug ${t.done ? "text-muted-foreground line-through" : ""}`}>{t.text}</p>
+              className={`flex-1 cursor-text whitespace-pre-wrap break-words text-sm leading-snug ${t.done ? "text-muted-foreground line-through" : ""}`}>{t.tag && <span className={`mr-1 rounded px-1 text-[10px] font-bold ${t.tag === "important" ? "bg-destructive/10 text-destructive" : "bg-amber-50 text-amber-800"}`}>{t.tag === "important" ? "중요" : "마감"}</span>}{t.text}</p>
           )}
           <div className="flex gap-1 opacity-0 transition group-hover:opacity-100">
             <button title="편집" onClick={() => { setEditing(t.id); setEditText(t.text); }} className="text-xs text-muted-foreground hover:text-primary">✎</button>
