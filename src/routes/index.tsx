@@ -50,7 +50,11 @@ function Dashboard() {
   const lastWeek = weeks[3]!;
   const todayKey = keyOf(new Date());
 
-  const get = (k: string) => store[k] ?? emptyDay();
+  const get = (k: string): DayData => {
+    const d = store[k];
+    if (!d) return emptyDay();
+    return { ...emptyDay(), ...d, attendance: { ...emptyDay().attendance, ...d.attendance } };
+  };
   const update = (k: string, fn: (d: DayData) => DayData) => setStore((s) => ({ ...s, [k]: fn(s[k] ?? emptyDay()) }));
   const shift = (w: number) => { const d = new Date(monday); d.setDate(d.getDate() + w * 7); setMonday(d); };
 
@@ -132,6 +136,35 @@ function Dashboard() {
                 placeholder={"체험학습: \n결석/지각: \n전달사항: "}
                 className="min-h-16 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/50 p-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
               />
+            </Cell>
+          ); })}
+        </Row>
+
+        <Row label="👤 출결" cols={cols}>
+          {days.map((d) => { const k = keyOf(d); const a = get(k).attendance; return (
+            <Cell key={k} today={k === todayKey}>
+              <div className="space-y-1">
+                <label className="block">
+                  <span className="text-[11px] font-semibold text-destructive/80">결석</span>
+                  <textarea
+                    value={a.absent}
+                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, absent: v } })); }}
+                    placeholder="이름 입력"
+                    rows={1}
+                    className="min-h-8 w-full resize-y rounded-lg border border-destructive/30 bg-destructive/5 p-1.5 text-sm leading-snug outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-[11px] font-semibold text-amber-700">지각</span>
+                  <textarea
+                    value={a.late}
+                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, late: v } })); }}
+                    placeholder="이름 입력"
+                    rows={1}
+                    className="min-h-8 w-full resize-y rounded-lg border border-amber-400/50 bg-amber-50 p-1.5 text-sm leading-snug outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+              </div>
             </Cell>
           ); })}
         </Row>
