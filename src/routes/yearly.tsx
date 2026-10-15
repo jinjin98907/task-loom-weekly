@@ -352,10 +352,10 @@ function WeekCards({ today, cells, rules, setCell, onMenu }: {
         <Btn sm onClick={() => shift(1)}>다음 주 ▶</Btn>
         {!isCur && <span className="text-[10px] text-muted-foreground">보는 주: {f(days[0]!)} ~ {f(days[4]!)}</span>}
       </div>
-      <div className="grid grid-cols-3 gap-1">
+      <div className="grid grid-cols-3 gap-0.5">
         {CLASSES.map((cls, ci) => (
           <table key={cls} className="w-full table-fixed border-collapse text-[10px]">
-            <colgroup><col style={{ width: 16 }} />{days.map((d) => <col key={keyOf(d)} />)}</colgroup>
+            <colgroup><col style={{ width: 14 }} />{days.map((d) => <col key={keyOf(d)} />)}</colgroup>
             <thead>
               <tr className="bg-sky-soft">
                 <th className="border px-0 py-0.5 font-semibold text-primary">{cls}</th>
@@ -379,7 +379,7 @@ function WeekCards({ today, cells, rules, setCell, onMenu }: {
                         <input value={c?.t ?? ""} onChange={(e) => setCell(k, { t: e.target.value })}
                           onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onMenu(e.clientX, e.clientY, k); }}
                           style={{ color: st.color }}
-                          className="w-full bg-transparent px-0 py-0.5 text-center text-[10px] font-medium outline-none focus:bg-sky-soft/60" />
+                          className="w-full bg-transparent px-0 py-0.5 text-center text-[9px] font-medium outline-none focus:bg-sky-soft/60 sm:text-[10px]" />
                       </td>
                     );
                   })}
