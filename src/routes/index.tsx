@@ -161,7 +161,7 @@ function Dashboard() {
           ); })}
         </Row>
 
-        <Row label="📢 공지사항" cols={cols}>
+        <Row label="📢 안내사항" cols={cols}>
           {days.map((d) => { const k = keyOf(d); return (
             <Cell key={k} today={k === todayKey}>
               <textarea
@@ -178,34 +178,34 @@ function Dashboard() {
           {days.map((d) => { const k = keyOf(d); const a = get(k).attendance; return (
             <Cell key={k} today={k === todayKey}>
               <div className="space-y-1">
-                <label className="block">
+                <label className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
                   <span className="text-[11px] font-semibold text-primary">결석</span>
                   <textarea
                     value={a.absent}
                     onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, absent: v } })); }}
                     placeholder="이름 입력"
                     rows={1}
-                    className="min-h-8 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
+                    className="min-h-8 min-w-0 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
-                <label className="block">
+                <label className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
                   <span className="text-[11px] font-semibold text-primary">지각</span>
                   <textarea
                     value={a.late}
                     onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, late: v } })); }}
                     placeholder="이름 입력"
                     rows={1}
-                    className="min-h-8 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
+                    className="min-h-8 min-w-0 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
-                <label className="block">
+                <label className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
                   <span className="text-[11px] font-semibold text-primary">교외 체험학습</span>
                   <textarea
                     value={a.trip}
                     onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, trip: v } })); }}
                     placeholder="이름 입력"
                     rows={1}
-                    className="min-h-8 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
+                    className="min-h-8 min-w-0 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
               </div>
