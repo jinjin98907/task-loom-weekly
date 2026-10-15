@@ -342,33 +342,33 @@ function WeekCards({ today, cells, rules, setCell, onMenu }: {
   const inYear = (d: Date) => SEMS.some((s) => d >= s.start && d <= s.end);
   const f = (d: Date) => `${d.getMonth() + 1}월 ${d.getDate()}일`;
   return (
-    <section className="mb-4 rounded-xl border bg-card p-3">
-      <div className="mb-2 flex flex-wrap items-center gap-2 text-sm">
-        <h2 className="mr-2 font-semibold text-foreground">이번 주 반별 시간표</h2>
-        <Btn onClick={() => shift(-1)}>◀ 이전 주</Btn>
-        <button onClick={() => setMon(mondayOf(today))} className={`rounded-lg px-3 py-1.5 font-semibold ${isCur ? "bg-primary text-primary-foreground" : "border border-sky-mid bg-sky-soft text-secondary-foreground hover:bg-sky-mid"}`}>
+    <section className="mb-3 rounded-xl border bg-card p-2">
+      <div className="mb-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+        <h2 className="mr-1 font-semibold text-foreground">이번 주 반별 시간표</h2>
+        <Btn sm onClick={() => shift(-1)}>◀ 이전 주</Btn>
+        <button onClick={() => setMon(mondayOf(today))} className={`rounded-md px-2 py-0.5 font-semibold ${isCur ? "bg-primary text-primary-foreground" : "border border-sky-mid bg-sky-soft text-secondary-foreground hover:bg-sky-mid"}`}>
           오늘 ({f(days[0]!)}~{days[4]!.getDate()}일)
         </button>
-        <Btn onClick={() => shift(1)}>다음 주 ▶</Btn>
-        {!isCur && <span className="text-xs text-muted-foreground">보는 주: {f(days[0]!)} ~ {f(days[4]!)}</span>}
+        <Btn sm onClick={() => shift(1)}>다음 주 ▶</Btn>
+        {!isCur && <span className="text-[10px] text-muted-foreground">보는 주: {f(days[0]!)} ~ {f(days[4]!)}</span>}
       </div>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <div className="grid grid-cols-3 gap-1">
         {CLASSES.map((cls, ci) => (
-          <table key={cls} className="w-full table-fixed border-collapse text-xs">
-            <colgroup><col style={{ width: 40 }} />{days.map((d) => <col key={keyOf(d)} />)}</colgroup>
+          <table key={cls} className="w-full table-fixed border-collapse text-[10px]">
+            <colgroup><col style={{ width: 16 }} />{days.map((d) => <col key={keyOf(d)} />)}</colgroup>
             <thead>
               <tr className="bg-sky-soft">
-                <th className="border px-1 py-1 font-semibold text-primary">{cls}</th>
+                <th className="border px-0 py-0.5 font-semibold text-primary">{cls}</th>
                 {days.map((d) => {
                   const t = keyOf(d) === keyOf(today);
-                  return <th key={keyOf(d)} className={`border px-1 py-1 font-semibold text-secondary-foreground ${t ? "bg-sky-mid/60" : ""}`}>{DOW[d.getDay()]}<span className="ml-0.5 font-normal opacity-70">{d.getDate()}</span></th>;
+                  return <th key={keyOf(d)} className={`border px-0 py-0.5 text-[9px] font-semibold text-secondary-foreground ${t ? "bg-sky-mid/60" : ""}`}>{DOW[d.getDay()]}<span className="font-normal opacity-70">{d.getDate()}</span></th>;
                 })}
               </tr>
             </thead>
             <tbody>
               {Array.from({ length: PERIODS }, (_, p) => (
                 <tr key={p}>
-                  <th className="border bg-sky-soft/40 font-semibold text-secondary-foreground">{p + 1}</th>
+                  <th className="border bg-sky-soft/40 py-0.5 text-[9px] font-semibold text-secondary-foreground">{p + 1}</th>
                   {days.map((d) => {
                     if (!inYear(d) || !hasPeriod(d, p)) return <td key={keyOf(d)} className="border cell-off" />;
                     const k = `${keyOf(d)}|${ci}|${p}`;
@@ -379,7 +379,7 @@ function WeekCards({ today, cells, rules, setCell, onMenu }: {
                         <input value={c?.t ?? ""} onChange={(e) => setCell(k, { t: e.target.value })}
                           onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onMenu(e.clientX, e.clientY, k); }}
                           style={{ color: st.color }}
-                          className="w-full bg-transparent px-0.5 py-1.5 text-center font-medium outline-none focus:bg-sky-soft/60" />
+                          className="w-full bg-transparent px-0 py-0.5 text-center text-[10px] font-medium outline-none focus:bg-sky-soft/60" />
                       </td>
                     );
                   })}
@@ -400,6 +400,6 @@ function dl(blob: Blob, name: string) {
   setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
-function Btn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
-  return <button onClick={onClick} className="rounded-lg border border-sky-mid bg-card px-3 py-1.5 font-semibold text-secondary-foreground transition hover:bg-sky-soft">{children}</button>;
+function Btn({ children, onClick, sm }: { children: React.ReactNode; onClick: () => void; sm?: boolean }) {
+  return <button onClick={onClick} className={`rounded-lg border border-sky-mid bg-card font-semibold text-secondary-foreground transition hover:bg-sky-soft ${sm ? "px-2 py-0.5 text-xs" : "px-3 py-1.5"}`}>{children}</button>;
 }
