@@ -65,7 +65,28 @@ function Dashboard() {
             {monday.getFullYear()}년 {monday.getMonth() + 1}월 {monday.getDate()}일 – {end.getMonth() + 1}월 {end.getDate()}일
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <NavBtn onClick={() => {
+            const blob = new Blob([JSON.stringify(store, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = `우리반-대시보드-백업-${keyOf(new Date())}.json`;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 30000);
+          }}>💾 데이터 전체 백업</NavBtn>
+          <label className="cursor-pointer rounded-lg border border-sky-mid bg-sky-soft px-4 py-2 text-sm font-semibold text-secondary-foreground transition hover:bg-sky-mid">
+            📂 데이터 복원
+            <input type="file" accept="application/json,.json" className="hidden" onChange={async (e) => {
+              const f = e.target.files?.[0]; e.target.value = "";
+              if (!f) return;
+              try {
+                const data = JSON.parse(await f.text());
+                if (typeof data !== "object" || data === null || Array.isArray(data)) throw new Error();
+                if (confirm("현재 데이터를 백업 파일 내용으로 바꿀까요?")) setStore(data);
+              } catch { alert("올바른 백업 파일이 아니에요."); }
+            }} />
+          </label>
+          <span className="mx-1 h-6 w-px bg-border" />
           <label className="mr-2 flex items-center gap-1 text-sm text-muted-foreground">
             <input type="checkbox" className="accent-sky-strong" checked={showWeekend} onChange={(e) => setShowWeekend(e.target.checked)} />
             주말 보기
