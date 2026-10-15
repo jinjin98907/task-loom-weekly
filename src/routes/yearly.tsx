@@ -3,6 +3,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 
 import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
 import { hasPeriod, isLongDay } from "@/lib/timetable-periods";
+import { normalizeRules, parseBackup, styleFor, type ColorRule } from "@/lib/keyword-colors";
 
 export const Route = createFileRoute("/yearly")({
   head: () => ({
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/yearly")({
 type Cell = { t: string; c?: string | undefined; b?: string | undefined };
 type Cells = Record<string, Cell>;
 const KEY = "teacher-yearly-timetable-v1";
+const RULES_KEY = "teacher-yearly-color-rules-v1";
 const CLASSES = ["1반", "2반", "3반"];
 const PERIODS = 6;
 const COLS = 5 * PERIODS;
@@ -28,21 +30,12 @@ const SEMS = [
   { label: "1학기", start: new Date(2026, 2, 1), end: new Date(2026, 7, 24) },
   { label: "2학기", start: new Date(2026, 7, 25), end: new Date(2027, 1, 28) },
 ];
-const RED = ["재량휴업", "한글날", "공개수업", "소방교육", "휴업", "방학", "개교기념", "현장체험", "운동회", "졸업", "입학", "시험", "평가"];
-const BLUE = ["창중", "체스", "동아리", "영어", "음악", "체육", "전담", "코딩"];
 const TEXT_COLORS = ["#111827", "#DC2626", "#DB2777", "#3A5A8C", "#6D5B9E", "#059669", "#B45309"];
 const BG_COLORS = ["", "#FEE2E2", "#FCE7F3", "#DCE6F2", "#E7E3F2", "#D1FAE5", "#FEF3C7"];
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const keyOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const DOW = "일월화수목금토";
-
-function autoStyle(t: string): { color?: string; background?: string } {
-  if (!t) return {};
-  if (RED.some((w) => t.includes(w))) return { color: "#DC2626", background: "#FDF2F8" };
-  if (BLUE.some((w) => t.includes(w))) return { color: "#3A5A8C" };
-  return {};
-}
 
 function weeksOf(start: Date, end: Date) {
   const m = new Date(start); m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
@@ -63,12 +56,19 @@ function Yearly() {
   const [menu, setMenu] = useState<{ x: number; y: number; k: string } | null>(null);
   const [bulk, setBulk] = useState(false);
   const [bulkText, setBulkText] = useState("");
+  const [rules, setRules] = useState<ColorRule[]>([]);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [nw, setNw] = useState("");
+  const [nc, setNc] = useState<string | undefined>(undefined);
+  const [nb, setNb] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     try { setCells(JSON.parse(localStorage.getItem(KEY) || "{}")); } catch {}
+    try { setRules(normalizeRules(JSON.parse(localStorage.getItem(RULES_KEY) || "[]"))); } catch {}
     setLoaded(true);
   }, []);
   useEffect(() => { if (loaded) localStorage.setItem(KEY, JSON.stringify(cells)); }, [cells, loaded]);
+  useEffect(() => { if (loaded) localStorage.setItem(RULES_KEY, JSON.stringify(rules)); }, [rules, loaded]);
   useEffect(() => {
     const close = () => setMenu(null);
     window.addEventListener("click", close);
@@ -111,6 +111,12 @@ function Yearly() {
 
   const setCell = (k: string, patch: Partial<Cell>) => setCells((s) => ({ ...s, [k]: { t: "", ...s[k], ...patch } }));
 
+  const addRule = () => {
+    const w = nw.trim(); if (!w || (!nc && !nb)) return;
+    setRules((s) => [...s.filter((x) => x.word !== w), { word: w, ...(nc ? { color: nc } : {}), ...(nb ? { bg: nb } : {}) }]);
+    setNw(""); setNc(undefined); setNb(undefined);
+  };
+
   const downloadTemplate = () => {
     const head = ["주 시작일", "반", ...Array.from({ length: COLS }, (_, i) => `${"월화수목금"[Math.floor(i / PERIODS)]}${(i % PERIODS) + 1}`)];
     const lines = [head.join("\t")];
@@ -144,15 +150,16 @@ function Yearly() {
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <Btn onClick={downloadTemplate}>📄 엑셀 양식 다운로드</Btn>
           <Btn onClick={() => setBulk(true)}>📋 일괄 붙여넣기</Btn>
-          <Btn onClick={() => dl(new Blob([JSON.stringify(cells, null, 2)], { type: "application/json" }), `학년시간표-백업-${keyOf(new Date())}.json`)}>💾 데이터 전체 백업</Btn>
+          <Btn onClick={() => setRulesOpen(true)}>🎨 단어 색상 규칙</Btn>
+          <Btn onClick={() => dl(new Blob([JSON.stringify({ v: 2, cells, rules }, null, 2)], { type: "application/json" }), `학년시간표-백업-${keyOf(new Date())}.json`)}>💾 데이터 전체 백업</Btn>
           <label className="cursor-pointer rounded-lg border border-sky-mid bg-sky-soft px-3 py-1.5 font-semibold text-secondary-foreground hover:bg-sky-mid">
             📂 데이터 불러오기
             <input type="file" accept=".json,application/json" className="hidden" onChange={async (e) => {
               const f = e.target.files?.[0]; e.target.value = ""; if (!f) return;
               try {
-                const d = JSON.parse(await f.text());
-                if (typeof d !== "object" || !d || Array.isArray(d)) throw 0;
-                if (confirm("현재 학년 시간표를 파일 내용으로 바꿀까요?")) setCells(d);
+                const parsed = parseBackup(JSON.parse(await f.text()));
+                if (!parsed) throw 0;
+                if (confirm("현재 학년 시간표를 파일 내용으로 바꿀까요?")) { setCells(parsed.cells as Cells); setRules(parsed.rules); }
               } catch { alert("올바른 백업 파일이 아니에요."); }
             }} />
           </label>
@@ -217,7 +224,7 @@ function Yearly() {
                       if (!inRange(d) || !hasPeriod(d, col % PERIODS)) return <td key={col} className="border cell-off" />;
                       const k = ck(d, ci, col % PERIODS);
                       const c = cells[k];
-                      const st = { ...autoStyle(c?.t ?? ""), ...(c?.c ? { color: c.c } : {}), ...(c?.b ? { background: c.b } : {}) };
+                      const st = { ...styleFor(c?.t ?? "", rules), ...(c?.c ? { color: c.c } : {}), ...(c?.b ? { background: c.b } : {}) };
                       return (
                         <td key={col} className={`border p-0 ${col % PERIODS === 0 ? (keyOf(d) === keyOf(today) ? "border-l-2 border-l-primary" : "border-l-2 border-l-sky-mid") : ""} ${keyOf(d) === keyOf(today) ? "bg-today" : isLongDay(d) ? "bg-day-alt" : ""}`} style={{ background: st.background }}>
                           <input
@@ -256,6 +263,44 @@ function Yearly() {
             {BG_COLORS.map((x) => <button key={x || "none"} onClick={() => setCell(menu.k, { b: x || undefined })} className={`h-6 w-6 rounded border ${menuCell?.b === x ? "ring-2 ring-primary" : ""}`} style={{ background: x || "transparent" }}>{x ? "" : "✕"}</button>)}
           </div>
           <button onClick={() => { setCell(menu.k, { c: undefined, b: undefined }); setMenu(null); }} className="w-full rounded-md border px-2 py-1 text-muted-foreground hover:bg-muted">자동 색상으로 되돌리기</button>
+        </div>
+      )}
+
+      {rulesOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 p-4" onClick={() => setRulesOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl bg-card p-5 shadow-xl">
+            <h2 className="mb-1 font-display text-lg text-foreground">🎨 단어 색상 규칙</h2>
+            <p className="mb-3 text-xs text-muted-foreground">시간표에 입력한 글자에 이 단어가 포함되면 지정한 색이 자동으로 표시돼요.</p>
+            <div className="mb-3 rounded-lg border bg-background p-3">
+              <input value={nw} onChange={(e) => setNw(e.target.value)} placeholder="단어 입력 (예: 등산, 독서)"
+                className="mb-2 w-full rounded-md border bg-card px-2 py-1 text-sm" />
+              <p className="mb-1 text-xs font-semibold text-foreground">글자색</p>
+              <div className="mb-2 flex gap-1">
+                {TEXT_COLORS.map((x) => <button key={x} onClick={() => setNc(nc === x ? undefined : x)} className={`h-6 w-6 rounded-full border ${nc === x ? "ring-2 ring-primary" : ""}`} style={{ background: x }} />)}
+              </div>
+              <p className="mb-1 text-xs font-semibold text-foreground">배경색</p>
+              <div className="mb-2 flex gap-1">
+                {BG_COLORS.map((x) => <button key={x || "none"} onClick={() => setNb((nb || "") === x ? undefined : x || undefined)} className={`h-6 w-6 rounded border ${(nb || "") === x ? "ring-2 ring-primary" : ""}`} style={{ background: x || "transparent" }}>{x ? "" : "✕"}</button>)}
+              </div>
+              <button disabled={!nw.trim() || (!nc && !nb)} onClick={addRule}
+                className="w-full rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-40">규칙 추가</button>
+            </div>
+            <div className="max-h-48 space-y-1 overflow-y-auto">
+              {rules.length === 0 && <p className="py-2 text-center text-xs text-muted-foreground">아직 추가한 규칙이 없어요. (재량휴업·공개수업·창중 같은 기본 단어는 자동으로 색이 들어가요.)</p>}
+              {rules.map((r) => (
+                <div key={r.word} className="flex items-center justify-between rounded-md border px-2 py-1.5 text-xs">
+                  <span className="flex items-center gap-2">
+                    <span className="rounded px-1.5 py-0.5 font-semibold" style={{ color: r.color, background: r.bg }}>{r.word}</span>
+                    <span className="text-muted-foreground">{[r.color ? "글자" : "", r.bg ? "배경" : ""].filter(Boolean).join(" + ")}</span>
+                  </span>
+                  <button onClick={() => setRules((s) => s.filter((x) => x.word !== r.word))} className="text-muted-foreground hover:text-destructive">✕</button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex justify-end">
+              <Btn onClick={() => setRulesOpen(false)}>닫기</Btn>
+            </div>
+          </div>
         </div>
       )}
 
