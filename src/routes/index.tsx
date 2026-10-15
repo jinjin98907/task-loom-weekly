@@ -51,7 +51,7 @@ function Dashboard() {
   const update = (k: string, fn: (d: DayData) => DayData) => setStore((s) => ({ ...s, [k]: fn(s[k] ?? emptyDay()) }));
   const shift = (w: number) => { const d = new Date(monday); d.setDate(d.getDate() + w * 7); setMonday(d); };
 
-  const end = days[days.length - 1];
+  const end = days[days.length - 1] ?? monday;
   const cols = `120px repeat(${days.length}, minmax(0, 1fr))`;
 
   return (
