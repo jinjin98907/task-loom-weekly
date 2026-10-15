@@ -213,7 +213,7 @@ function Dashboard() {
 
         {[0, 1, 2, 3, 4, 5].map((p) => (
           <Row key={p} label={`${p + 1}교시`} cols={cols}>
-            {days.map((d) => { const k = keyOf(d); const v = subjectFor(yCells, k, myClass, p, get(k).periods[p] ?? ""); const yc = yCells[cellKey(k, myClass, p)]; const det = get(k).details?.[p] ?? ""; const st = { ...styleFor(v, rules), ...(yc?.c ? { color: yc.c } : {}), ...(yc?.b ? { background: yc.b } : {}) }; return (
+            {days.map((d) => { const k = keyOf(d); const v = subjectFor(yCells, k, myClass, p, get(k).periods[p] ?? ""); const yc = yCells[cellKey(k, myClass, p)]; const det = get(k).details?.[p] ?? ""; const st = { ...styleFor(v, rules), ...(yc?.c ? { color: yc.c } : {}), ...(yc?.b ? { background: yc.b } : {}) }; const fit = subjectFit(v); return (
               <Cell key={k} today={k === todayKey}>
                 <div className="flex overflow-hidden rounded-lg border border-sky-mid/70">
                   <input
