@@ -34,4 +34,8 @@ describe("요일별 교시 수", () => {
     expect(periodsOn(day(2026, 10, 17))).toBe(0); // 토
     expect(periodsOn(day(2026, 10, 18))).toBe(0); // 일
   });
+
+  it("6교시 날(화·목)을 월·수·금과 구분한다", () => {
+    expect([1, 2, 3, 4, 5].map((n) => isLongDay(mon(2026, 10, n)))).toEqual([false, true, false, true, false]);
+  });
 });
