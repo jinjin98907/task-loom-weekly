@@ -266,6 +266,44 @@ function Yearly() {
         </div>
       )}
 
+      {rulesOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 p-4" onClick={() => setRulesOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl bg-card p-5 shadow-xl">
+            <h2 className="mb-1 font-display text-lg text-foreground">🎨 단어 색상 규칙</h2>
+            <p className="mb-3 text-xs text-muted-foreground">시간표에 입력한 글자에 이 단어가 포함되면 지정한 색이 자동으로 표시돼요.</p>
+            <div className="mb-3 rounded-lg border bg-background p-3">
+              <input value={nw} onChange={(e) => setNw(e.target.value)} placeholder="단어 입력 (예: 등산, 독서)"
+                className="mb-2 w-full rounded-md border bg-card px-2 py-1 text-sm" />
+              <p className="mb-1 text-xs font-semibold text-foreground">글자색</p>
+              <div className="mb-2 flex gap-1">
+                {TEXT_COLORS.map((x) => <button key={x} onClick={() => setNc(nc === x ? undefined : x)} className={`h-6 w-6 rounded-full border ${nc === x ? "ring-2 ring-primary" : ""}`} style={{ background: x }} />)}
+              </div>
+              <p className="mb-1 text-xs font-semibold text-foreground">배경색</p>
+              <div className="mb-2 flex gap-1">
+                {BG_COLORS.map((x) => <button key={x || "none"} onClick={() => setNb((nb || "") === x ? undefined : x || undefined)} className={`h-6 w-6 rounded border ${(nb || "") === x ? "ring-2 ring-primary" : ""}`} style={{ background: x || "transparent" }}>{x ? "" : "✕"}</button>)}
+              </div>
+              <button disabled={!nw.trim() || (!nc && !nb)} onClick={addRule}
+                className="w-full rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-40">규칙 추가</button>
+            </div>
+            <div className="max-h-48 space-y-1 overflow-y-auto">
+              {rules.length === 0 && <p className="py-2 text-center text-xs text-muted-foreground">아직 추가한 규칙이 없어요. (재량휴업·공개수업·창중 같은 기본 단어는 자동으로 색이 들어가요.)</p>}
+              {rules.map((r) => (
+                <div key={r.word} className="flex items-center justify-between rounded-md border px-2 py-1.5 text-xs">
+                  <span className="flex items-center gap-2">
+                    <span className="rounded px-1.5 py-0.5 font-semibold" style={{ color: r.color, background: r.bg }}>{r.word}</span>
+                    <span className="text-muted-foreground">{[r.color ? "글자" : "", r.bg ? "배경" : ""].filter(Boolean).join(" + ")}</span>
+                  </span>
+                  <button onClick={() => setRules((s) => s.filter((x) => x.word !== r.word))} className="text-muted-foreground hover:text-destructive">✕</button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex justify-end">
+              <Btn onClick={() => setRulesOpen(false)}>닫기</Btn>
+            </div>
+          </div>
+        </div>
+      )}
+
       {bulk && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 p-4" onClick={() => setBulk(false)}>
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-3xl rounded-2xl bg-card p-5 shadow-xl">
