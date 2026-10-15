@@ -16,12 +16,13 @@ export const Route = createFileRoute("/")({
 });
 
 type Todo = { id: string; text: string; done: boolean };
-type DayData = { todos: Todo[]; notice: string; periods: string[] };
+type Attendance = { absent: string; late: string };
+type DayData = { todos: Todo[]; notice: string; attendance: Attendance; periods: string[] };
 type Store = Record<string, DayData>;
 
 const KEY = "teacher-dashboard-v1";
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
-const emptyDay = (): DayData => ({ todos: [], notice: "", periods: ["", "", "", "", "", ""] });
+const emptyDay = (): DayData => ({ todos: [], notice: "", attendance: { absent: "", late: "" }, periods: ["", "", "", "", "", ""] });
 const keyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const mondayOf = (d: Date) => {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
