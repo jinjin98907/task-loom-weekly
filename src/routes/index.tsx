@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppTabs } from "@/components/AppTabs";
+import { AutoTextarea } from "@/components/AutoTextarea";
+import { subjectFit } from "@/lib/subject-fit";
+
 import { useEffect, useMemo, useState } from "react";
 import { type Attendance, emptyAttendance, normalizeAttendance } from "@/lib/attendance";
 import { normalizeRules, styleFor, type ColorRule } from "@/lib/keyword-colors";
@@ -216,21 +219,24 @@ function Dashboard() {
             {days.map((d) => { const k = keyOf(d); const v = subjectFor(yCells, k, myClass, p, get(k).periods[p] ?? ""); const yc = yCells[cellKey(k, myClass, p)]; const det = get(k).details?.[p] ?? ""; const st = { ...styleFor(v, rules), ...(yc?.c ? { color: yc.c } : {}), ...(yc?.b ? { background: yc.b } : {}) }; const fit = subjectFit(v); return (
               <Cell key={k} today={k === todayKey}>
                 <div className="flex overflow-hidden rounded-lg border border-sky-mid/70">
-                  <input
+                  <AutoTextarea
                     value={v}
                     onChange={(e) => editSubject(k, p, e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); e.currentTarget.blur(); } }}
                     placeholder="과목"
+                    rows={fit.rows}
                     style={{ flex: 1, color: st.color, background: st.background }}
-                    className={`min-w-0 border-r border-sky-mid/70 px-1 py-1 text-center text-xs font-semibold outline-none focus:ring-2 focus:ring-inset focus:ring-ring ${st.background ? "" : "bg-sky-soft"} ${v ? "" : "text-muted-foreground"}`}
+                    className={`min-w-0 resize-none overflow-hidden break-words border-r border-sky-mid/70 px-1 py-1 text-center font-semibold leading-tight outline-none focus:ring-2 focus:ring-inset focus:ring-ring ${fit.fontClass} ${st.background ? "" : "bg-sky-soft"} ${v ? "" : "text-muted-foreground"}`}
                   />
-                  <textarea
+                  <AutoTextarea
                     value={det}
                     rows={Math.max(1, det.split("\n").length)}
                     onChange={(e) => { const val = e.target.value; update(k, (x) => { const ds = [...(x.details ?? ["", "", "", "", "", ""])]; ds[p] = val; return { ...x, details: ds }; }); }}
                     placeholder="수업 내용·준비물·메모"
                     style={{ flex: 5 }}
-                    className="min-w-0 resize-none bg-card px-1.5 py-1 text-xs leading-snug text-foreground outline-none placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-inset focus:ring-ring"
+                    className="min-w-0 resize-none overflow-hidden bg-card px-1.5 py-1 text-xs leading-snug text-foreground outline-none placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-inset focus:ring-ring"
                   />
+
                 </div>
               </Cell>
             ); })}
