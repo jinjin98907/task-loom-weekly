@@ -12,3 +12,4 @@
 ## Rules
 
 - Keep pure date, ordering and timetable rules in small browser-safe modules under `src/lib/` and unit-test them there instead of through a route. Why: route modules pull in TanStack Router and server-only code, which makes the rules hard to check on their own.
+- Attendance reports read the existing dashboard LocalStorage records without creating a separate attendance store. Why: period views must remain synchronized and must not overwrite teacher records.
