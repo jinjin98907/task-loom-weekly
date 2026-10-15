@@ -74,8 +74,9 @@ export function styleFor(text: string, userRules: ColorRule[]): AutoStyle {
 export function parseBackup(data: unknown): { cells: Record<string, unknown>; rules: ColorRule[] } | null {
   if (typeof data !== "object" || !data || Array.isArray(data)) return null;
   const d = data as Record<string, unknown>;
-  if (typeof d.cells === "object" && d.cells !== null && !Array.isArray(d.cells)) {
-    return { cells: d.cells as Record<string, unknown>, rules: normalizeRules(d.rules) };
+  const c = d["cells"];
+  if (typeof c === "object" && c !== null && !Array.isArray(c)) {
+    return { cells: c as Record<string, unknown>, rules: normalizeRules(d["rules"]) };
   }
   // 구버전 백업: cells 맵이 곧 전체 데이터
   return { cells: data as Record<string, unknown>, rules: [] };
