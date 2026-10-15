@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppTabs } from "@/components/AppTabs";
 import { useEffect, useMemo, useState } from "react";
-import { AttendanceAI } from "@/components/AttendanceAI";
 import { type Attendance, emptyAttendance, normalizeAttendance } from "@/lib/attendance";
 import { normalizeRules, styleFor, type ColorRule } from "@/lib/keyword-colors";
 import { cellKey, MY_CLASS_KEY, normalizeClass, setSubject, subjectFor, YEARLY_KEY, type YCells } from "@/lib/class-sync";
@@ -134,7 +133,6 @@ function Dashboard() {
         </div>
       </header>
 
-      <AttendanceAI records={weeks.flat().map((d) => { const a = get(keyOf(d)).attendance; return { date: `${d.getMonth() + 1}월 ${d.getDate()}일(${"일월화수목금토"[d.getDay()]})`, absent: a.absent, late: a.late, trip: a.trip }; })} />
 
       <div className="space-y-6">
       {weeks.map((days, wi) => (
