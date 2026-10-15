@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { AppTabs } from "@/components/AppTabs";
 import { useEffect, useMemo, useState } from "react";
 import { AttendanceAI } from "@/components/AttendanceAI";
 import { type Attendance, emptyAttendance, normalizeAttendance } from "@/lib/attendance";
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-type Todo = { id: string; text: string; done: boolean };
+type Todo = { id: string; text: string; done: boolean; tag?: "important" | "deadline" };
 type DayData = { todos: Todo[]; notice: string; attendance: Attendance; periods: string[] };
 type Store = Record<string, DayData>;
 
@@ -64,6 +65,7 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background p-6">
+      <AppTabs />
       <header className="mb-5 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl text-foreground">🏫 우리반 주간 대시보드</h1>
@@ -72,7 +74,6 @@ function Dashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link to="/yearly" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90">📅 학년 전체 시간표</Link>
           <NavBtn onClick={() => {
             const blob = new Blob([JSON.stringify(store, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
