@@ -3,6 +3,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 
 import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
 import { hasPeriod, isLongDay } from "@/lib/timetable-periods";
+import { normalizeRules, parseBackup, styleFor, type ColorRule } from "@/lib/keyword-colors";
 
 export const Route = createFileRoute("/yearly")({
   head: () => ({
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/yearly")({
 type Cell = { t: string; c?: string | undefined; b?: string | undefined };
 type Cells = Record<string, Cell>;
 const KEY = "teacher-yearly-timetable-v1";
+const RULES_KEY = "teacher-yearly-color-rules-v1";
 const CLASSES = ["1반", "2반", "3반"];
 const PERIODS = 6;
 const COLS = 5 * PERIODS;
@@ -28,21 +30,10 @@ const SEMS = [
   { label: "1학기", start: new Date(2026, 2, 1), end: new Date(2026, 7, 24) },
   { label: "2학기", start: new Date(2026, 7, 25), end: new Date(2027, 1, 28) },
 ];
-const RED = ["재량휴업", "한글날", "공개수업", "소방교육", "휴업", "방학", "개교기념", "현장체험", "운동회", "졸업", "입학", "시험", "평가"];
-const BLUE = ["창중", "체스", "동아리", "영어", "음악", "체육", "전담", "코딩"];
 const TEXT_COLORS = ["#111827", "#DC2626", "#DB2777", "#3A5A8C", "#6D5B9E", "#059669", "#B45309"];
 const BG_COLORS = ["", "#FEE2E2", "#FCE7F3", "#DCE6F2", "#E7E3F2", "#D1FAE5", "#FEF3C7"];
 
 const pad = (n: number) => String(n).padStart(2, "0");
-const keyOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const DOW = "일월화수목금토";
-
-function autoStyle(t: string): { color?: string; background?: string } {
-  if (!t) return {};
-  if (RED.some((w) => t.includes(w))) return { color: "#DC2626", background: "#FDF2F8" };
-  if (BLUE.some((w) => t.includes(w))) return { color: "#3A5A8C" };
-  return {};
-}
 
 function weeksOf(start: Date, end: Date) {
   const m = new Date(start); m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
