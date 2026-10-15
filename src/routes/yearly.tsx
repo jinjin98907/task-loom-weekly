@@ -219,7 +219,7 @@ function Yearly() {
                       const c = cells[k];
                       const st = { ...autoStyle(c?.t ?? ""), ...(c?.c ? { color: c.c } : {}), ...(c?.b ? { background: c.b } : {}) };
                       return (
-                        <td key={col} className={`border p-0 ${col % PERIODS === 0 ? "border-l-2 border-l-sky-mid" : ""} ${keyOf(d) === keyOf(today) ? "bg-today" : isLongDay(d) ? "bg-day-alt" : ""}`} style={{ background: st.background }}>
+                        <td key={col} className={`border p-0 ${col % PERIODS === 0 ? (keyOf(d) === keyOf(today) ? "border-l-2 border-l-primary" : "border-l-2 border-l-sky-mid") : ""} ${keyOf(d) === keyOf(today) ? "bg-today" : isLongDay(d) ? "bg-day-alt" : ""}`} style={{ background: st.background }}>
                           <input
                             value={c?.t ?? ""}
                             onChange={(e) => setCell(k, { t: e.target.value })}

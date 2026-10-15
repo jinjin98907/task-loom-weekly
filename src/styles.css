@@ -62,7 +62,7 @@
   --sky-mid: oklch(0.87 0.042 234);
   --sky-strong: oklch(0.64 0.085 236);
   --day-alt: oklch(0.975 0.014 236);
-  --today: oklch(0.945 0.032 236);
+  --today: oklch(0.928 0.042 236);
 }
 
 @layer base {
