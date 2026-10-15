@@ -15,7 +15,7 @@ export const Route = createFileRoute("/yearly")({
   component: Yearly,
 });
 
-type Cell = { t: string; c?: string; b?: string };
+type Cell = { t: string; c?: string | undefined; b?: string | undefined };
 type Cells = Record<string, Cell>;
 const KEY = "teacher-yearly-timetable-v1";
 const CLASSES = ["1반", "2반", "3반"];
