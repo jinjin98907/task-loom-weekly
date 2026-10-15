@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Fragment, useEffect, useMemo, useState } from "react";
 
 import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
+import { hasPeriod, periodsOn } from "@/lib/timetable-periods";
 
 export const Route = createFileRoute("/yearly")({
   head: () => ({
@@ -91,7 +92,7 @@ function Yearly() {
   const keyAtIn = (list: Date[][], row: number, col: number) => {
     const w = list[Math.floor(row / 3)]; if (!w || col < 0 || col >= COLS) return null;
     const d = w[Math.floor(col / PERIODS)]!;
-    if (!inRange(d)) return null;
+    if (!inRange(d) || !hasPeriod(d, col % PERIODS)) return null;
     return ck(d, row % 3, col % PERIODS);
   };
   const keyAt = (row: number, col: number) => keyAtIn(ordered, row, col);
@@ -115,7 +116,7 @@ function Yearly() {
     const lines = [head.join("\t")];
     weeks.forEach((w) => CLASSES.forEach((c, ci) => {
       const vals = Array.from({ length: COLS }, (_, col) => {
-        const d = w[Math.floor(col / PERIODS)]!; return cells[ck(d, ci, col % PERIODS)]?.t ?? "";
+        const d = w[Math.floor(col / PERIODS)]!; const p = col % PERIODS; return hasPeriod(d, p) ? (cells[ck(d, ci, p)]?.t ?? "") : "";
       });
       lines.push([keyOf(w[0]!), c, ...vals].join("\t"));
     }));
@@ -199,7 +200,11 @@ function Yearly() {
                 </tr>
                 <tr className="bg-sky-soft/50 text-muted-foreground">
                   <th className="border" />
-                  {Array.from({ length: COLS }, (_, i) => <th key={i} className="border font-normal">{(i % PERIODS) + 1}</th>)}
+                  {Array.from({ length: COLS }, (_, i) => {
+                    const d = w[Math.floor(i / PERIODS)]!;
+                    const on = inRange(d) && hasPeriod(d, i % PERIODS);
+                    return <th key={i} className={`border font-normal ${on ? "" : "text-muted-foreground/40"}`}>{(i % PERIODS) + 1}</th>;
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -208,7 +213,7 @@ function Yearly() {
                     <th className="border bg-sky-soft/40 px-1 font-semibold text-secondary-foreground">{cls}</th>
                     {Array.from({ length: COLS }, (_, col) => {
                       const d = w[Math.floor(col / PERIODS)]!;
-                      if (!inRange(d)) return <td key={col} className="border bg-muted/40" />;
+                      if (!inRange(d) || !hasPeriod(d, col % PERIODS)) return <td key={col} className="border bg-muted/40" />;
                       const k = ck(d, ci, col % PERIODS);
                       const c = cells[k];
                       const st = { ...autoStyle(c?.t ?? ""), ...(c?.c ? { color: c.c } : {}), ...(c?.b ? { background: c.b } : {}) };
