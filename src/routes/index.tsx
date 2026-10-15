@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { AttendanceAI } from "@/components/AttendanceAI";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -101,6 +102,8 @@ function Dashboard() {
           <NavBtn onClick={() => shift(1)}>다음 주 ▶</NavBtn>
         </div>
       </header>
+
+      <AttendanceAI records={weeks.flat().map((d) => { const a = get(keyOf(d)).attendance; return { date: `${d.getMonth() + 1}월 ${d.getDate()}일(${"일월화수목금토"[d.getDay()]})`, absent: a.absent, late: a.late }; })} />
 
       <div className="space-y-6">
       {weeks.map((days, wi) => (
