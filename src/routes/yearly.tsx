@@ -159,25 +159,40 @@ function Yearly() {
       </header>
 
       <div className="mb-3 flex items-center gap-2">
-        {SEMS.map((s, i) => (
-          <button key={s.label} onClick={() => setSem(i)}
-            className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${sem === i ? "bg-primary text-primary-foreground shadow-sm" : "border border-sky-mid bg-card text-secondary-foreground hover:bg-sky-soft"}`}>
-            {s.label} <span className="font-normal opacity-80">({s.start.getMonth() + 1}/{s.start.getDate()}~{s.end.getMonth() + 1}/{s.end.getDate()})</span>
-          </button>
-        ))}
+        {semOrder.map((i) => {
+          const s = SEMS[i]!;
+          const on = semIdx === i;
+          return (
+            <button key={s.label} onClick={() => setSem(i)}
+              className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${on ? "bg-primary text-primary-foreground shadow-sm" : "border border-sky-mid bg-card text-secondary-foreground hover:bg-sky-soft"}`}>
+              {s.label} <span className="font-normal opacity-80">({s.start.getMonth() + 1}/{s.start.getDate()}~{s.end.getMonth() + 1}/{s.end.getDate()})</span>
+              {isCurrentRange(s, today) && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${on ? "bg-primary-foreground/25 text-primary-foreground" : "border border-sky-mid text-primary"}`}>현재</span>}
+            </button>
+          );
+        })}
         <p className="ml-2 text-xs text-muted-foreground">엑셀에서 여러 칸을 복사해 칸을 누르고 Ctrl+V · 우클릭으로 색상 변경</p>
       </div>
 
       <div className="space-y-2">
-        {weeks.map((w, wi) => (
-          <div key={keyOf(w[0]!)} className="overflow-x-auto rounded-lg border bg-card">
+        {ordered.map((w, wi) => {
+          const past = isPastWeek(w, today);
+          const cur = isCurrentWeek(w, today);
+          return (
+          <Fragment key={keyOf(w[0]!)}>
+          {wi > 0 && !isPastWeek(ordered[wi - 1]!, today) && past && (
+            <p className="pt-1 text-xs font-semibold text-muted-foreground">지난주</p>
+          )}
+          <div className={`overflow-x-auto rounded-lg border bg-card ${past ? "opacity-90" : ""}`}>
             <table className="w-full table-fixed border-collapse text-[11px]">
               <colgroup><col style={{ width: 52 }} />{Array.from({ length: COLS }, (_, i) => <col key={i} />)}</colgroup>
               <thead>
                 <tr className="bg-sky-soft">
-                  <th className="border px-1 py-0.5 text-secondary-foreground">{wi + 1}주</th>
+                  <th className="border px-1 py-0.5 text-secondary-foreground">
+                    <span className={past ? "text-muted-foreground" : ""}>{weekNum.get(keyOf(w[0]!))}주</span>
+                    {cur && <span className="mt-0.5 block rounded bg-primary/10 text-[10px] font-semibold text-primary">이번 주</span>}
+                  </th>
                   {w.map((d) => (
-                    <th key={keyOf(d)} colSpan={PERIODS} className={`border px-1 py-0.5 font-semibold ${inRange(d) ? "text-secondary-foreground" : "text-muted-foreground/50"} ${keyOf(d) === keyOf(new Date()) ? "bg-sky-mid" : ""}`}>
+                    <th key={keyOf(d)} colSpan={PERIODS} className={`border px-1 py-0.5 font-semibold ${inRange(d) ? "text-secondary-foreground" : "text-muted-foreground/50"} ${keyOf(d) === keyOf(today) ? "bg-sky-mid" : ""}`}>
                       {d.getMonth() + 1}월 {d.getDate()}일 {DOW[d.getDay()]}
                     </th>
                   ))}
@@ -218,7 +233,9 @@ function Yearly() {
               </tbody>
             </table>
           </div>
-        ))}
+          </Fragment>
+          );
+        })}
       </div>
 
       {menu && (
