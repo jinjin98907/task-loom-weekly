@@ -19,7 +19,7 @@ export function monthGrid(year: number, month: number): Date[][] {
 
 export type TodoTag = "important" | "deadline";
 export const TAG_ORDER: (TodoTag | undefined)[] = [undefined, "important", "deadline"];
-export const nextTag = (t?: TodoTag) => TAG_ORDER[(TAG_ORDER.indexOf(t) + 1) % TAG_ORDER.length];
+export const nextTag = (t?: TodoTag): TodoTag | undefined => TAG_ORDER[(TAG_ORDER.indexOf(t) + 1) % TAG_ORDER.length];
 
 /** Bundle every app store into one backup object. */
 export const ALL_KEYS = { dashboard: "teacher-dashboard-v1", yearly: "teacher-yearly-timetable-v1", rules: "teacher-yearly-color-rules-v1" } as const;
