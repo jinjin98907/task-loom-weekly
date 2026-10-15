@@ -55,7 +55,7 @@ export type AutoStyle = { color?: string; background?: string };
 /**
  * 셀 텍스트에 규칙을 적용한 색을 반환한다.
  * - 사용자 지정 규칙이 기본 규칙보다 우선
- * - 같은 그룹 안에서는 먼저 등록된 규칙이 이김
+ * - 같은 그룹 안에서는 나중에 등록된 규칙이 이김 (같은 단어를 다시 추가하면 새 설정으로 바뀜)
  */
 export function styleFor(text: string, userRules: ColorRule[]): AutoStyle {
   const t = text.trim();

@@ -28,12 +28,12 @@ describe("styleFor", () => {
     expect(styleFor("", [{ word: "x", color: "#000" }])).toEqual({});
   });
 
-  it("같은 단어 규칙이 여러 개면 먼저 등록된 것이 이긴다", () => {
+  it("같은 단어를 다시 추가하면 나중 규칙으로 바뀐다", () => {
     const rules = normalizeRules([
       { word: "창중", color: "#059669" },
       { word: "창중", color: "#B45309" },
     ]);
-    expect(styleFor("창중", rules)).toEqual({ color: "#059669" });
+    expect(styleFor("창중", rules)).toEqual({ color: "#B45309" });
   });
 });
 
