@@ -64,9 +64,11 @@ function Yearly() {
 
   useEffect(() => {
     try { setCells(JSON.parse(localStorage.getItem(KEY) || "{}")); } catch {}
+    try { setRules(normalizeRules(JSON.parse(localStorage.getItem(RULES_KEY) || "[]"))); } catch {}
     setLoaded(true);
   }, []);
   useEffect(() => { if (loaded) localStorage.setItem(KEY, JSON.stringify(cells)); }, [cells, loaded]);
+  useEffect(() => { if (loaded) localStorage.setItem(RULES_KEY, JSON.stringify(rules)); }, [rules, loaded]);
   useEffect(() => {
     const close = () => setMenu(null);
     window.addEventListener("click", close);
@@ -108,6 +110,12 @@ function Yearly() {
   };
 
   const setCell = (k: string, patch: Partial<Cell>) => setCells((s) => ({ ...s, [k]: { t: "", ...s[k], ...patch } }));
+
+  const addRule = () => {
+    const w = nw.trim(); if (!w || (!nc && !nb)) return;
+    setRules((s) => [...s.filter((x) => x.word !== w), { word: w, ...(nc ? { color: nc } : {}), ...(nb ? { bg: nb } : {}) }]);
+    setNw(""); setNc(undefined); setNb(undefined);
+  };
 
   const downloadTemplate = () => {
     const head = ["주 시작일", "반", ...Array.from({ length: COLS }, (_, i) => `${"월화수목금"[Math.floor(i / PERIODS)]}${(i % PERIODS) + 1}`)];
