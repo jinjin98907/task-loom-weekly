@@ -8,7 +8,7 @@ export const summarizeAttendance = createServerFn({ method: "POST" })
     return { question: String(d.question ?? "").slice(0, 500), records: d.records.slice(0, 60) };
   })
   .handler(async ({ data }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) return { ok: false as const, error: "AI 설정이 되어 있지 않아요." };
     const lines = data.records
       .filter((r) => r.absent.trim() || r.late.trim())
