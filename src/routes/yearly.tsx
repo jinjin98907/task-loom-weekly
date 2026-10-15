@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+
+import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
 
 export const Route = createFileRoute("/yearly")({
   head: () => ({
@@ -55,7 +57,8 @@ function weeksOf(start: Date, end: Date) {
 function Yearly() {
   const [cells, setCells] = useState<Cells>({});
   const [loaded, setLoaded] = useState(false);
-  const [sem, setSem] = useState(0);
+  const [sem, setSem] = useState<number | null>(null);
+  const [today] = useState(() => new Date());
   const [menu, setMenu] = useState<{ x: number; y: number; k: string } | null>(null);
   const [bulk, setBulk] = useState(false);
   const [bulkText, setBulkText] = useState("");
@@ -71,24 +74,34 @@ function Yearly() {
     return () => window.removeEventListener("click", close);
   }, []);
 
-  const S = SEMS[sem]!;
+  const semOrder = useMemo(() => orderSemesters(SEMS, today), [today]);
+  const semIdx = sem ?? semOrder[0]!;
+  const S = SEMS[semIdx]!;
   const weeks = useMemo(() => weeksOf(S.start, S.end), [S]);
+  // 화면에 보이는 순서: 이번 주가 맨 위, 지난 주는 맨 아래
+  const ordered = useMemo(() => orderWeeks(weeks, today), [weeks, today]);
+  const weekNum = useMemo(() => {
+    const m = new Map<string, number>();
+    weeks.forEach((w, i) => m.set(keyOf(w[0]!), i + 1));
+    return m;
+  }, [weeks]);
   const inRange = (d: Date) => d >= S.start && d <= S.end;
   const ck = (d: Date, cls: number, p: number) => `${keyOf(d)}|${cls}|${p}`;
-  // global grid coordinate -> cell key
-  const keyAt = (row: number, col: number) => {
-    const w = weeks[Math.floor(row / 3)]; if (!w || col < 0 || col >= COLS) return null;
+  // global grid coordinate -> cell key (list: 화면 순서 또는 학기 chronological 순서)
+  const keyAtIn = (list: Date[][], row: number, col: number) => {
+    const w = list[Math.floor(row / 3)]; if (!w || col < 0 || col >= COLS) return null;
     const d = w[Math.floor(col / PERIODS)]!;
     if (!inRange(d)) return null;
     return ck(d, row % 3, col % PERIODS);
   };
+  const keyAt = (row: number, col: number) => keyAtIn(ordered, row, col);
 
-  const pasteGrid = (text: string, row: number, col: number) => {
+  const pasteGrid = (text: string, row: number, col: number, list: Date[][] = ordered) => {
     const rows = text.replace(/\r/g, "").replace(/\n$/, "").split("\n").map((r) => r.split("\t"));
     setCells((s) => {
       const n = { ...s };
       rows.forEach((r, i) => r.forEach((v, j) => {
-        const k = keyAt(row + i, col + j); if (!k) return;
+        const k = keyAtIn(list, row + i, col + j); if (!k) return;
         n[k] = { ...n[k], t: v.trim() };
       }));
       return n;
@@ -114,7 +127,7 @@ function Yearly() {
     let rows = bulkText.replace(/\r/g, "").split("\n").filter((r) => r.trim() !== "");
     if (rows[0]?.startsWith("주")) rows = rows.slice(1);
     const stripped = rows.map((r) => { const c = r.split("\t"); return /^\d{4}-\d{2}-\d{2}$/.test(c[0]?.trim() ?? "") ? c.slice(2) : c; });
-    pasteGrid(stripped.map((c) => c.join("\t")).join("\n"), 0, 0);
+    pasteGrid(stripped.map((c) => c.join("\t")).join("\n"), 0, 0, weeks);
     setBulk(false); setBulkText("");
   };
 
@@ -146,25 +159,40 @@ function Yearly() {
       </header>
 
       <div className="mb-3 flex items-center gap-2">
-        {SEMS.map((s, i) => (
-          <button key={s.label} onClick={() => setSem(i)}
-            className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${sem === i ? "bg-primary text-primary-foreground shadow-sm" : "border border-sky-mid bg-card text-secondary-foreground hover:bg-sky-soft"}`}>
-            {s.label} <span className="font-normal opacity-80">({s.start.getMonth() + 1}/{s.start.getDate()}~{s.end.getMonth() + 1}/{s.end.getDate()})</span>
-          </button>
-        ))}
+        {semOrder.map((i) => {
+          const s = SEMS[i]!;
+          const on = semIdx === i;
+          return (
+            <button key={s.label} onClick={() => setSem(i)}
+              className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${on ? "bg-primary text-primary-foreground shadow-sm" : "border border-sky-mid bg-card text-secondary-foreground hover:bg-sky-soft"}`}>
+              {s.label} <span className="font-normal opacity-80">({s.start.getMonth() + 1}/{s.start.getDate()}~{s.end.getMonth() + 1}/{s.end.getDate()})</span>
+              {isCurrentRange(s, today) && <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${on ? "bg-primary-foreground/25 text-primary-foreground" : "border border-sky-mid text-primary"}`}>현재</span>}
+            </button>
+          );
+        })}
         <p className="ml-2 text-xs text-muted-foreground">엑셀에서 여러 칸을 복사해 칸을 누르고 Ctrl+V · 우클릭으로 색상 변경</p>
       </div>
 
       <div className="space-y-2">
-        {weeks.map((w, wi) => (
-          <div key={keyOf(w[0]!)} className="overflow-x-auto rounded-lg border bg-card">
+        {ordered.map((w, wi) => {
+          const past = isPastWeek(w, today);
+          const cur = isCurrentWeek(w, today);
+          return (
+          <Fragment key={keyOf(w[0]!)}>
+          {wi > 0 && !isPastWeek(ordered[wi - 1]!, today) && past && (
+            <p className="pt-1 text-xs font-semibold text-muted-foreground">지난주</p>
+          )}
+          <div className={`overflow-x-auto rounded-lg border bg-card ${past ? "opacity-90" : ""}`}>
             <table className="w-full table-fixed border-collapse text-[11px]">
               <colgroup><col style={{ width: 52 }} />{Array.from({ length: COLS }, (_, i) => <col key={i} />)}</colgroup>
               <thead>
                 <tr className="bg-sky-soft">
-                  <th className="border px-1 py-0.5 text-secondary-foreground">{wi + 1}주</th>
+                  <th className="border px-1 py-0.5 text-secondary-foreground">
+                    <span className={past ? "text-muted-foreground" : ""}>{weekNum.get(keyOf(w[0]!))}주</span>
+                    {cur && <span className="mt-0.5 block rounded bg-primary/10 text-[10px] font-semibold text-primary">이번 주</span>}
+                  </th>
                   {w.map((d) => (
-                    <th key={keyOf(d)} colSpan={PERIODS} className={`border px-1 py-0.5 font-semibold ${inRange(d) ? "text-secondary-foreground" : "text-muted-foreground/50"} ${keyOf(d) === keyOf(new Date()) ? "bg-sky-mid" : ""}`}>
+                    <th key={keyOf(d)} colSpan={PERIODS} className={`border px-1 py-0.5 font-semibold ${inRange(d) ? "text-secondary-foreground" : "text-muted-foreground/50"} ${keyOf(d) === keyOf(today) ? "bg-sky-mid" : ""}`}>
                       {d.getMonth() + 1}월 {d.getDate()}일 {DOW[d.getDay()]}
                     </th>
                   ))}
@@ -205,7 +233,9 @@ function Yearly() {
               </tbody>
             </table>
           </div>
-        ))}
+          </Fragment>
+          );
+        })}
       </div>
 
       {menu && (
