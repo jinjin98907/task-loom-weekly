@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AttendanceAI } from "@/components/AttendanceAI";
 
@@ -72,6 +72,7 @@ function Dashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Link to="/yearly" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90">📅 학년 전체 시간표</Link>
           <NavBtn onClick={() => {
             const blob = new Blob([JSON.stringify(store, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
