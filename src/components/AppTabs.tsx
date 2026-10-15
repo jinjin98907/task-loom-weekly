@@ -4,6 +4,7 @@ const TABS = [
   { to: "/", label: "🏫 주간 대시보드" },
   { to: "/yearly", label: "📅 학년 전체 시간표 (1년)" },
   { to: "/calendar", label: "🗓️ 업무 캘린더" },
+  { to: "/attendance", label: "👤 출결 모아보기" },
 ] as const;
 
 export function AppTabs() {
