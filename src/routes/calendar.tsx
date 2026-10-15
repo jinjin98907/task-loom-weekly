@@ -17,7 +17,7 @@ export const Route = createFileRoute("/calendar")({
   component: CalendarPage,
 });
 
-type Todo = { id: string; text: string; done: boolean; tag?: TodoTag };
+type Todo = { id: string; text: string; done: boolean; tag?: TodoTag | undefined };
 type Day = { todos?: Todo[]; [k: string]: unknown };
 type Store = Record<string, Day>;
 const KEY = ALL_KEYS.dashboard;
