@@ -149,23 +149,23 @@ function Dashboard() {
             <Cell key={k} today={k === todayKey}>
               <div className="space-y-1">
                 <label className="block">
-                  <span className="text-[11px] font-semibold text-destructive/80">결석</span>
+                  <span className="text-[11px] font-semibold text-primary">결석</span>
                   <textarea
                     value={a.absent}
                     onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, absent: v } })); }}
                     placeholder="이름 입력"
                     rows={1}
-                    className="min-h-8 w-full resize-y rounded-lg border border-destructive/30 bg-destructive/5 p-1.5 text-sm leading-snug outline-none focus:ring-2 focus:ring-ring"
+                    className="min-h-8 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
                 <label className="block">
-                  <span className="text-[11px] font-semibold text-amber-700">지각</span>
+                  <span className="text-[11px] font-semibold text-primary">지각</span>
                   <textarea
                     value={a.late}
                     onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, late: v } })); }}
                     placeholder="이름 입력"
                     rows={1}
-                    className="min-h-8 w-full resize-y rounded-lg border border-amber-400/50 bg-amber-50 p-1.5 text-sm leading-snug outline-none focus:ring-2 focus:ring-ring"
+                    className="min-h-8 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
               </div>

@@ -27,8 +27,8 @@ const SEMS = [
 ];
 const RED = ["재량휴업", "한글날", "공개수업", "소방교육", "휴업", "방학", "개교기념", "현장체험", "운동회", "졸업", "입학", "시험", "평가"];
 const BLUE = ["창중", "체스", "동아리", "영어", "음악", "체육", "전담", "코딩"];
-const TEXT_COLORS = ["#111827", "#DC2626", "#DB2777", "#2563EB", "#7C3AED", "#059669", "#D97706"];
-const BG_COLORS = ["", "#FEE2E2", "#FCE7F3", "#DBEAFE", "#EDE9FE", "#D1FAE5", "#FEF3C7"];
+const TEXT_COLORS = ["#111827", "#DC2626", "#DB2777", "#3A5A8C", "#6D5B9E", "#059669", "#B45309"];
+const BG_COLORS = ["", "#FEE2E2", "#FCE7F3", "#DCE6F2", "#E7E3F2", "#D1FAE5", "#FEF3C7"];
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const keyOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -37,7 +37,7 @@ const DOW = "일월화수목금토";
 function autoStyle(t: string): { color?: string; background?: string } {
   if (!t) return {};
   if (RED.some((w) => t.includes(w))) return { color: "#DC2626", background: "#FDF2F8" };
-  if (BLUE.some((w) => t.includes(w))) return { color: "#4F46E5" };
+  if (BLUE.some((w) => t.includes(w))) return { color: "#3A5A8C" };
   return {};
 }
 
