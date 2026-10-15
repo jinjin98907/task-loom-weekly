@@ -70,6 +70,6 @@
 
 /* 수업이 없는 칸 (학기 경계일, 요일별 교시를 넘어서는 교시) */
 @utility cell-off {
-  background-color: var(--muted);
-  background-image: repeating-linear-gradient(45deg, var(--sky-mid) 0 1px, transparent 1px 7px);
+  background-color: color-mix(in oklab, var(--muted-foreground) 10%, var(--background));
+  background-image: repeating-linear-gradient(45deg, color-mix(in oklab, var(--sky-strong) 35%, transparent) 0 1px, transparent 1px 5px);
 }
