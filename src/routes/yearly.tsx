@@ -389,10 +389,9 @@ function WeekCards({ today, cells, rules, setCell, onMenu }: {
             <thead>
               <tr className="bg-sky-soft">
                 <th className="border px-0 py-0.5 font-semibold text-primary">{cls}</th>
-                {days.map((d) => {
-                  const t = keyOf(d) === keyOf(today);
-                  return <th key={keyOf(d)} className={`border px-0 py-0.5 text-[9px] font-semibold text-secondary-foreground ${t ? "bg-sky-mid/60" : ""}`}>{DOW[d.getDay()]}<span className="font-normal opacity-70">{d.getDate()}</span></th>;
-                })}
+                {days.map((d) => (
+                  <th key={keyOf(d)} className="border px-0 py-0.5 text-[9px] font-semibold text-secondary-foreground">{DOW[d.getDay()]}<span className="font-normal opacity-70">{d.getDate()}</span></th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -405,7 +404,7 @@ function WeekCards({ today, cells, rules, setCell, onMenu }: {
                     const c = cells[k];
                     const st = { ...styleFor(c?.t ?? "", rules), ...(c?.c ? { color: c.c } : {}), ...(c?.b ? { background: c.b } : {}) };
                     return (
-                      <td key={keyOf(d)} className={`border p-0 ${keyOf(d) === keyOf(today) ? "bg-today" : ""}`} style={{ background: st.background }}>
+                      <td key={keyOf(d)} className="border p-0" style={{ background: st.background }}>
                         <input value={c?.t ?? ""} onChange={(e) => setCell(k, { t: e.target.value })}
                           onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onMenu(e.clientX, e.clientY, k); }}
                           style={{ color: st.color }}
