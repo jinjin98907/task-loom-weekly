@@ -34,6 +34,8 @@ const TEXT_COLORS = ["#111827", "#DC2626", "#DB2777", "#3A5A8C", "#6D5B9E", "#05
 const BG_COLORS = ["", "#FEE2E2", "#FCE7F3", "#DCE6F2", "#E7E3F2", "#D1FAE5", "#FEF3C7"];
 
 const pad = (n: number) => String(n).padStart(2, "0");
+const keyOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const DOW = "일월화수목금토";
 
 function weeksOf(start: Date, end: Date) {
   const m = new Date(start); m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
@@ -54,6 +56,11 @@ function Yearly() {
   const [menu, setMenu] = useState<{ x: number; y: number; k: string } | null>(null);
   const [bulk, setBulk] = useState(false);
   const [bulkText, setBulkText] = useState("");
+  const [rules, setRules] = useState<ColorRule[]>([]);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [nw, setNw] = useState("");
+  const [nc, setNc] = useState<string | undefined>(undefined);
+  const [nb, setNb] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     try { setCells(JSON.parse(localStorage.getItem(KEY) || "{}")); } catch {}
