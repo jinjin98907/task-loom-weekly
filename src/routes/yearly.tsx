@@ -213,7 +213,7 @@ function Yearly() {
                     <th className="border bg-sky-soft/40 px-1 font-semibold text-secondary-foreground">{cls}</th>
                     {Array.from({ length: COLS }, (_, col) => {
                       const d = w[Math.floor(col / PERIODS)]!;
-                      if (!inRange(d) || !hasPeriod(d, col % PERIODS)) return <td key={col} className="border bg-muted/40" />;
+                      if (!inRange(d) || !hasPeriod(d, col % PERIODS)) return <td key={col} className="border cell-off" />;
                       const k = ck(d, ci, col % PERIODS);
                       const c = cells[k];
                       const st = { ...autoStyle(c?.t ?? ""), ...(c?.c ? { color: c.c } : {}), ...(c?.b ? { background: c.b } : {}) };
