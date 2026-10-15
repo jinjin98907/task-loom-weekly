@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AttendanceAI } from "@/components/AttendanceAI";
 import { type Attendance, emptyAttendance, normalizeAttendance } from "@/lib/attendance";
 import { normalizeRules, styleFor, type ColorRule } from "@/lib/keyword-colors";
+import { cellKey, MY_CLASS_KEY, normalizeClass, setSubject, subjectFor, YEARLY_KEY, type YCells } from "@/lib/class-sync";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,13 +41,32 @@ function Dashboard() {
   const [monday, setMonday] = useState(() => mondayOf(new Date()));
   const [showWeekend, setShowWeekend] = useState(false);
   const [rules, setRules] = useState<ColorRule[]>([]);
+  const [yCells, setYCells] = useState<YCells>({});
+  const [myClass, setMyClass] = useState(0);
 
   useEffect(() => {
     try { setStore(JSON.parse(localStorage.getItem(KEY) || "{}")); } catch {}
-    try { setRules(normalizeRules(JSON.parse(localStorage.getItem("teacher-yearly-color-rules-v1") || "[]"))); } catch {}
+    const readShared = () => {
+      try { setRules(normalizeRules(JSON.parse(localStorage.getItem("teacher-yearly-color-rules-v1") || "[]"))); } catch {}
+      try { setYCells(JSON.parse(localStorage.getItem(YEARLY_KEY) || "{}")); } catch {}
+      setMyClass(normalizeClass(localStorage.getItem(MY_CLASS_KEY)));
+    };
+    readShared();
     setLoaded(true);
+    // 다른 창/탭에서 학년 시간표를 고치면 즉시 반영
+    const onStorage = (e: StorageEvent) => { if (!e.key || e.key === YEARLY_KEY || e.key === MY_CLASS_KEY || e.key === "teacher-yearly-color-rules-v1") readShared(); };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
   useEffect(() => { if (loaded) localStorage.setItem(KEY, JSON.stringify(store)); }, [store, loaded]);
+  // 과목 칸 = 학년 전체 시간표의 내 학급 칸 (세부 내용은 대시보드에만 저장)
+  const editSubject = (k: string, p: number, val: string) => {
+    let cur: YCells = {};
+    try { cur = JSON.parse(localStorage.getItem(YEARLY_KEY) || "{}"); } catch {}
+    const next = setSubject(cur, k, myClass, p, val);
+    localStorage.setItem(YEARLY_KEY, JSON.stringify(next));
+    setYCells(next);
+  };
 
   const weeks = useMemo(() => Array.from({ length: 4 }, (_, w) => Array.from({ length: showWeekend ? 7 : 5 }, (_, i) => {
     const d = new Date(monday); d.setDate(d.getDate() + w * 7 + i); return d;
@@ -98,6 +118,12 @@ function Dashboard() {
             }} />
           </label>
           <span className="mx-1 h-6 w-px bg-border" />
+          <label className="flex items-center gap-1 text-sm text-muted-foreground">
+            내 학급
+            <select aria-label="내 학급" value={myClass} onChange={(e) => { const n = normalizeClass(e.target.value); setMyClass(n); localStorage.setItem(MY_CLASS_KEY, String(n)); }} className="rounded-lg border border-sky-mid bg-card px-2 py-1.5 text-sm font-semibold text-secondary-foreground">
+              <option value={0}>1반</option><option value={1}>2반</option><option value={2}>3반</option>
+            </select>
+          </label>
           <label className="mr-2 flex items-center gap-1 text-sm text-muted-foreground">
             <input type="checkbox" className="accent-sky-strong" checked={showWeekend} onChange={(e) => setShowWeekend(e.target.checked)} />
             주말 보기
@@ -189,12 +215,12 @@ function Dashboard() {
 
         {[0, 1, 2, 3, 4, 5].map((p) => (
           <Row key={p} label={`${p + 1}교시`} cols={cols}>
-            {days.map((d) => { const k = keyOf(d); const v = get(k).periods[p] ?? ""; const det = get(k).details?.[p] ?? ""; const st = styleFor(v, rules); return (
+            {days.map((d) => { const k = keyOf(d); const v = subjectFor(yCells, k, myClass, p, get(k).periods[p] ?? ""); const yc = yCells[cellKey(k, myClass, p)]; const det = get(k).details?.[p] ?? ""; const st = { ...styleFor(v, rules), ...(yc?.c ? { color: yc.c } : {}), ...(yc?.b ? { background: yc.b } : {}) }; return (
               <Cell key={k} today={k === todayKey}>
                 <div className="flex overflow-hidden rounded-lg border border-sky-mid/70">
                   <input
                     value={v}
-                    onChange={(e) => { const val = e.target.value; update(k, (x) => { const ps = [...x.periods]; ps[p] = val; return { ...x, periods: ps }; }); }}
+                    onChange={(e) => editSubject(k, p, e.target.value)}
                     placeholder="과목"
                     style={{ flex: 1, color: st.color, background: st.background }}
                     className={`min-w-0 border-r border-sky-mid/70 px-1 py-1 text-center text-xs font-semibold outline-none focus:ring-2 focus:ring-inset focus:ring-ring ${st.background ? "" : "bg-sky-soft"} ${v ? "" : "text-muted-foreground"}`}
