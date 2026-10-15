@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hasPeriod, periodsOn } from "@/lib/timetable-periods";
+import { hasPeriod, isLongDay, periodsOn } from "@/lib/timetable-periods";
 
 const day = (y: number, m: number, d: number) => new Date(y, m - 1, d);
 // 2026-10-12(월) ~ 2026-10-16(금)
