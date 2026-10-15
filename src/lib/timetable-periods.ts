@@ -7,3 +7,6 @@ export const periodsOn = (d: Date) => PERIODS_BY_DOW[d.getDay()] ?? 0;
 
 /** 그 날짜에 그 교시가 있는지. period는 0부터 세므로 5교시는 period=4. */
 export const hasPeriod = (d: Date, period: number) => period < periodsOn(d);
+
+/** 6교시까지 있는 날(화·목). 월·수·금과 시각적으로 묶음을 나누는 데 쓴다. */
+export const isLongDay = (d: Date) => periodsOn(d) === 6;
