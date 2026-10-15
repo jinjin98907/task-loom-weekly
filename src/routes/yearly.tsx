@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppTabs } from "@/components/AppTabs";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { inSel, isMulti, selToTSV, type GridSel } from "@/lib/grid-select";
 
 import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
 import { hasPeriod, isLongDay } from "@/lib/timetable-periods";
@@ -98,6 +99,24 @@ function Yearly() {
   };
   const keyAt = (row: number, col: number) => keyAtIn(ordered, row, col);
 
+  // 드래그 선택 + Ctrl+C 복사
+  const [sel, setSel] = useState<GridSel | null>(null);
+  const dragging = useRef(false);
+  const copyRef = useRef<() => string | null>(() => null);
+  copyRef.current = () => (sel && isMulti(sel) ? selToTSV(sel, (r, c) => { const k = keyAt(r, c); return k ? cells[k]?.t ?? "" : ""; }) : null);
+  useEffect(() => {
+    const up = () => { dragging.current = false; };
+    const onCopy = (e: ClipboardEvent) => {
+      const t = copyRef.current(); if (t == null) return;
+      e.preventDefault(); e.clipboardData?.setData("text/plain", t);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSel(null); };
+    window.addEventListener("mouseup", up);
+    document.addEventListener("copy", onCopy);
+    window.addEventListener("keydown", onKey);
+    return () => { window.removeEventListener("mouseup", up); document.removeEventListener("copy", onCopy); window.removeEventListener("keydown", onKey); };
+  }, []);
+
   const pasteGrid = (text: string, row: number, col: number, list: Date[][] = ordered) => {
     const rows = text.replace(/\r/g, "").replace(/\n$/, "").split("\n").map((r) => r.split("\t"));
     setCells((s) => {
@@ -183,7 +202,7 @@ function Yearly() {
             </button>
           );
         })}
-        <p className="ml-2 text-xs text-muted-foreground">엑셀에서 여러 칸을 복사해 칸을 누르고 Ctrl+V · 우클릭으로 색상 변경</p>
+        <p className="ml-2 text-xs text-muted-foreground">드래그로 여러 칸 선택 후 Ctrl+C · 칸을 누르고 Ctrl+V로 붙여넣기 · 우클릭으로 색상 변경</p>
       </div>
 
       <div className="space-y-2">
@@ -226,12 +245,23 @@ function Yearly() {
                     <th className="border bg-sky-soft/40 px-1 font-semibold text-secondary-foreground">{cls}</th>
                     {Array.from({ length: COLS }, (_, col) => {
                       const d = w[Math.floor(col / PERIODS)]!;
-                      if (!inRange(d) || !hasPeriod(d, col % PERIODS)) return <td key={col} className="border cell-off" />;
+                      const R = wi * 3 + ci;
+                      const selOn = isMulti(sel) && inSel(sel, R, col);
+                      const dragProps = {
+                        onMouseDown: (e: React.MouseEvent) => { if (e.button !== 0) return; dragging.current = true; setSel({ r0: R, c0: col, r1: R, c1: col }); },
+                        onMouseEnter: (e: React.MouseEvent) => {
+                          if (!dragging.current || !(e.buttons & 1)) return;
+                          (document.activeElement as HTMLElement | null)?.blur?.();
+                          window.getSelection()?.removeAllRanges();
+                          setSel((s) => (s ? { ...s, r1: R, c1: col } : s));
+                        },
+                      };
+                      if (!inRange(d) || !hasPeriod(d, col % PERIODS)) return <td key={col} {...dragProps} className={`border cell-off ${selOn ? "outline outline-2 -outline-offset-2 outline-primary/60" : ""}`} />;
                       const k = ck(d, ci, col % PERIODS);
                       const c = cells[k];
                       const st = { ...styleFor(c?.t ?? "", rules), ...(c?.c ? { color: c.c } : {}), ...(c?.b ? { background: c.b } : {}) };
                       return (
-                        <td key={col} className={`border p-0 ${col % PERIODS === 0 ? (keyOf(d) === keyOf(today) ? "border-l-2 border-l-primary" : "border-l-2 border-l-sky-mid") : ""} ${keyOf(d) === keyOf(today) ? "bg-today" : isLongDay(d) ? "bg-day-alt" : ""}`} style={{ background: st.background }}>
+                        <td key={col} {...dragProps} className={`border p-0 ${selOn ? "outline outline-2 -outline-offset-2 outline-primary/60" : ""} ${col % PERIODS === 0 ? (keyOf(d) === keyOf(today) ? "border-l-2 border-l-primary" : "border-l-2 border-l-sky-mid") : ""} ${keyOf(d) === keyOf(today) ? "bg-today" : isLongDay(d) ? "bg-day-alt" : ""}`} style={{ background: selOn ? "color-mix(in oklch, var(--sky-mid) 55%, transparent)" : st.background }}>
                           <input
                             value={c?.t ?? ""}
                             onChange={(e) => setCell(k, { t: e.target.value })}
