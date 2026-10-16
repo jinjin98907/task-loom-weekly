@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppTabs } from "@/components/AppTabs";
+import { useAccount } from "@/components/CloudSync";
 import { syncNow } from "@/lib/cloud-sync-client";
 
 export const Route = createFileRoute("/auth")({
@@ -20,32 +22,14 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = useAccount();
+  const signedInEmail = user?.email ?? null;
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "error" | "info"; text: string } | null>(null);
-  const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    let unsub: (() => void) | undefined;
-    import("@/integrations/supabase/client")
-      .then(({ supabase }) => {
-        supabase.auth.getSession().then(({ data }) => {
-          if (active) setSignedInEmail(data.session?.user.email ?? null);
-        });
-        const sub = supabase.auth.onAuthStateChange((_event, session) => {
-          if (active) setSignedInEmail(session?.user.email ?? null);
-        });
-        unsub = () => sub.data.subscription.unsubscribe();
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-      unsub?.();
-    };
-  }, []);
 
   const afterAuth = async () => {
     try {
@@ -125,8 +109,13 @@ function AuthPage() {
 
   const signOut = async () => {
     const { supabase } = await import("@/integrations/supabase/client");
+    await queryClient.cancelQueries();
+    queryClient.clear();
     await supabase.auth.signOut();
-    setMsg({ kind: "info", text: "로그아웃했어요. 이 기기에 저장된 데이터는 그대로 남아 있어요." });
+    setMsg({
+      kind: "info",
+      text: "로그아웃했어요. 이 계정의 기록은 화면에서 숨겨지고, 다시 로그인하면 그대로 돌아와요.",
+    });
   };
 
   const inputCls =
