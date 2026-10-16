@@ -20,6 +20,7 @@ export function attendanceRangeError(start: string, end: string): string | null 
 /** Read only recorded attendance, including both range boundaries, in date order. */
 export function attendanceInRange(store: unknown, start: string, end: string): AttendanceRow[] {
   if (attendanceRangeError(start, end) || !store || typeof store !== "object" || Array.isArray(store)) return [];
+
   return Object.entries(store)
     .filter(([date]) => isAttendanceDate(date) && date >= start && date <= end)
     .map(([date, day]): AttendanceRow => {
