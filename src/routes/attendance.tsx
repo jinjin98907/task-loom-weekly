@@ -95,9 +95,16 @@ function AttendancePage() {
               <tbody>
                 {rows.map((row) => {
                   const day = new Date(Number(row.date.slice(0, 4)), Number(row.date.slice(5, 7)) - 1, Number(row.date.slice(8, 10)));
+                  const cols = [
+                    { name: row.absent, reason: row.absentReason },
+                    { name: row.late, reason: row.lateReason },
+                    { name: row.trip, reason: row.tripReason },
+                  ];
                   return <tr key={row.date} className="border-b border-sky-mid/60 hover:bg-sky-soft/30">
                     <th scope="row" className="px-2 py-4 text-left align-top font-medium text-secondary-foreground md:px-4"><time dateTime={row.date}>{row.date}<span className="mt-1 block text-xs text-muted-foreground">({"일월화수목금토"[day.getDay()]})</span></time></th>
-                    {[row.absent, row.late, row.trip].map((text, i) => <td key={i} className="whitespace-pre-wrap break-words px-2 py-4 align-top text-foreground md:px-4">{text.trim() ? text : <span className="text-muted-foreground">—</span>}</td>)}
+                    {cols.map((col, i) => <td key={i} className="whitespace-pre-wrap break-words px-2 py-4 align-top text-foreground md:px-4">
+                      {col.name.trim() ? <>{col.name}{col.reason.trim() && <span className="mt-0.5 block text-xs text-muted-foreground">{col.reason}</span>}</> : <span className="text-muted-foreground">—</span>}
+                    </td>)}
                   </tr>;
                 })}
                 {rows.length === 0 && <tr><td colSpan={4} className="border-b border-sky-mid py-16 text-center text-muted-foreground">선택한 기간에 출결 기록이 없어요.</td></tr>}
