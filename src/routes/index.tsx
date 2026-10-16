@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppTabs } from "@/components/AppTabs";
 import { AutoTextarea } from "@/components/AutoTextarea";
+import { TodoList } from "@/components/TodoList";
 import { subjectFit } from "@/lib/subject-fit";
 
 import { useEffect, useMemo, useState } from "react";
 import { type Attendance, emptyAttendance, normalizeAttendance } from "@/lib/attendance";
+import { normalizeNotices, type Todo } from "@/lib/day-data";
 import { normalizeRules, styleFor, type ColorRule } from "@/lib/keyword-colors";
 import { cellKey, MY_CLASS_KEY, normalizeClass, setSubject, subjectFor, YEARLY_KEY, type YCells } from "@/lib/class-sync";
 
@@ -22,13 +24,12 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-type Todo = { id: string; text: string; done: boolean; tag?: "important" | "deadline" };
-type DayData = { todos: Todo[]; notice: string; attendance: Attendance; periods: string[]; details?: string[] };
+type DayData = { todos: Todo[]; notices: Todo[]; notice?: string; attendance: Attendance; periods: string[]; details?: string[] };
 type Store = Record<string, DayData>;
 
 const KEY = "teacher-dashboard-v1";
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
-const emptyDay = (): DayData => ({ todos: [], notice: "", attendance: emptyAttendance(), periods: ["", "", "", "", "", ""] });
+const emptyDay = (): DayData => ({ todos: [], notices: [], attendance: emptyAttendance(), periods: ["", "", "", "", "", ""] });
 const keyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const mondayOf = (d: Date) => {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -80,9 +81,14 @@ function Dashboard() {
   const get = (k: string): DayData => {
     const d = store[k];
     if (!d) return emptyDay();
-    return { ...emptyDay(), ...d, attendance: normalizeAttendance(d.attendance) };
+    return { ...emptyDay(), ...d, attendance: normalizeAttendance(d.attendance), notices: normalizeNotices(d) };
   };
-  const update = (k: string, fn: (d: DayData) => DayData) => setStore((s) => ({ ...s, [k]: fn(s[k] ?? emptyDay()) }));
+  const update = (k: string, fn: (d: DayData) => DayData) => setStore((s) => {
+    const cur = s[k] ?? emptyDay();
+    const base: DayData = { ...emptyDay(), ...cur, notices: normalizeNotices(cur) };
+    delete base.notice; // 예전 형식(긴 글 한 칸)은 항목 목록으로 옮겼으니 지운다
+    return { ...s, [k]: fn(base) };
+  });
   const shift = (w: number) => { const d = new Date(monday); d.setDate(d.getDate() + w * 7); setMonday(d); };
 
   const end = lastWeek[lastWeek.length - 1] ?? monday;
@@ -158,19 +164,14 @@ function Dashboard() {
 
         <Row label="✅ 체크사항" cols={cols}>
           {days.map((d) => { const k = keyOf(d); return (
-            <Cell key={k} today={k === todayKey}><TodoCell data={get(k)} onChange={(fn) => update(k, fn)} /></Cell>
+            <Cell key={k} today={k === todayKey}><TodoList items={get(k).todos} onChange={(fn) => update(k, (x) => ({ ...x, todos: fn(x.todos) }))} placeholder="+ 업무 추가 (Shift+Enter 줄바꿈)" /></Cell>
           ); })}
         </Row>
 
         <Row label="📢 안내사항" cols={cols}>
           {days.map((d) => { const k = keyOf(d); return (
             <Cell key={k} today={k === todayKey}>
-              <textarea
-                value={get(k).notice}
-                onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, notice: v })); }}
-                placeholder={"체험학습: \n결석/지각: \n전달사항: "}
-                className="min-h-16 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/50 p-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-ring"
-              />
+              <TodoList items={get(k).notices} onChange={(fn) => update(k, (x) => ({ ...x, notices: fn(x.notices) }))} placeholder="+ 안내 추가 (Shift+Enter 줄바꿈)" />
             </Cell>
           ); })}
         </Row>
@@ -265,49 +266,4 @@ function Row({ label, cols, children }: { label: string; cols: string; children:
 
 function Cell({ today, children }: { today: boolean; children: React.ReactNode }) {
   return <div className={`border-l p-2 ${today ? "bg-today" : ""}`}>{children}</div>;
-}
-
-function TodoCell({ data, onChange }: { data: DayData; onChange: (fn: (d: DayData) => DayData) => void }) {
-  const [draft, setDraft] = useState("");
-  const [editing, setEditing] = useState<string | null>(null);
-  const [editText, setEditText] = useState("");
-
-  const add = () => {
-    const t = draft.trim(); if (!t) return;
-    onChange((d) => ({ ...d, todos: [...d.todos, { id: crypto.randomUUID(), text: t, done: false }] }));
-    setDraft("");
-  };
-  const save = (id: string) => {
-    const t = editText.trim();
-    onChange((d) => ({ ...d, todos: t ? d.todos.map((x) => (x.id === id ? { ...x, text: t } : x)) : d.todos.filter((x) => x.id !== id) }));
-    setEditing(null);
-  };
-
-  return (
-    <div className="space-y-1.5">
-      {data.todos.map((t) => (
-        <div key={t.id} className="group flex items-start gap-2 rounded-lg p-1.5 hover:bg-sky-soft">
-          <input type="checkbox" checked={t.done} className="mt-1 accent-sky-strong"
-            onChange={() => onChange((d) => ({ ...d, todos: d.todos.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)) }))} />
-          {editing === t.id ? (
-            <textarea autoFocus value={editText} rows={Math.max(2, editText.split("\n").length)}
-              onChange={(e) => setEditText(e.target.value)} onBlur={() => save(t.id)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); save(t.id); } if (e.key === "Escape") setEditing(null); }}
-              className="flex-1 resize-none rounded border border-input p-1 text-sm outline-none" />
-          ) : (
-            <p onDoubleClick={() => { setEditing(t.id); setEditText(t.text); }}
-              className={`flex-1 cursor-text whitespace-pre-wrap break-words text-sm leading-snug ${t.done ? "text-muted-foreground line-through" : ""}`}>{t.tag && <span className={`mr-1 rounded px-1 text-[10px] font-bold ${t.tag === "important" ? "bg-destructive/10 text-destructive" : "bg-amber-50 text-amber-800"}`}>{t.tag === "important" ? "중요" : "마감"}</span>}{t.text}</p>
-          )}
-          <div className="flex gap-1 opacity-0 transition group-hover:opacity-100">
-            <button title="편집" onClick={() => { setEditing(t.id); setEditText(t.text); }} className="text-xs text-muted-foreground hover:text-primary">✎</button>
-            <button title="삭제" onClick={() => onChange((d) => ({ ...d, todos: d.todos.filter((x) => x.id !== t.id) }))} className="text-xs text-muted-foreground hover:text-destructive">✕</button>
-          </div>
-        </div>
-      ))}
-      <textarea value={draft} rows={Math.max(1, draft.split("\n").length)} onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); add(); } }}
-        placeholder="+ 업무 추가 (Shift+Enter 줄바꿈)"
-        className="w-full resize-none rounded-lg border border-dashed border-sky-mid bg-transparent p-1.5 text-sm outline-none focus:border-solid focus:ring-2 focus:ring-ring" />
-    </div>
-  );
 }
