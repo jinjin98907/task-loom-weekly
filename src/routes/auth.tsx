@@ -2,8 +2,10 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppTabs } from "@/components/AppTabs";
+import { Button } from "@/components/ui/button";
 import { useAccount } from "@/components/CloudSync";
 import { syncNow } from "@/lib/cloud-sync-client";
+import { releaseLocalOwner, notifyLocalOwnerChange } from "@/lib/cloud-local-owner";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -65,7 +67,10 @@ function AuthPage() {
     setMsg(null);
     try {
       const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({
+        email, password,
+        options: { emailRedirectTo: window.location.origin },
+      });
       if (error) {
         setMsg({
           kind: "error",
@@ -108,14 +113,27 @@ function AuthPage() {
   };
 
   const signOut = async () => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await supabase.auth.signOut();
-    setMsg({
-      kind: "info",
-      text: "로그아웃했어요. 이 계정의 기록은 화면에서 숨겨지고, 다시 로그인하면 그대로 돌아와요.",
-    });
+    if (busy) return;
+    setBusy(true);
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      if (releaseLocalOwner(localStorage)) notifyLocalOwnerChange();
+      setPassword("");
+      setEmail("");
+      await navigate({ to: "/auth", replace: true });
+      setMsg({
+        kind: "info",
+        text: "로그아웃했어요. 이 계정의 기록은 화면에서 숨겨지고, 다시 로그인하면 그대로 돌아와요.",
+      });
+    } catch {
+      setMsg({ kind: "error", text: "로그아웃하지 못했어요. 다시 시도해 주세요." });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const inputCls =
@@ -133,18 +151,20 @@ function AuthPage() {
               이 기기의 대시보드 데이터가 클라우드에 자동 저장되고, 다른 기기에서도 같은 데이터를 볼 수 있어요.
             </p>
             <div className="flex justify-center gap-2">
-              <button
+              <Button
                 onClick={() => navigate({ to: "/" })}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
               >
                 대시보드로 가기
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={busy}
                 onClick={signOut}
                 className="rounded-lg border border-sky-mid bg-sky-soft px-4 py-2 text-sm font-semibold text-secondary-foreground transition hover:bg-sky-mid"
               >
                 로그아웃
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -157,20 +177,22 @@ function AuthPage() {
             </div>
 
             <div className="space-y-2">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => oauth("google")}
                 disabled={busy}
                 className="w-full rounded-lg border border-sky-mid bg-sky-soft px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition hover:bg-sky-mid disabled:opacity-60"
               >
                 Google로 계속하기
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={() => oauth("lovable")}
                 disabled={busy}
                 className="w-full rounded-lg border border-sky-mid bg-sky-soft px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition hover:bg-sky-mid disabled:opacity-60"
               >
                 Lovable로 계속하기
-              </button>
+              </Button>
             </div>
 
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -186,6 +208,7 @@ function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="이메일"
+                aria-label="이메일"
                 autoComplete="email"
                 className={inputCls}
               />
@@ -196,36 +219,38 @@ function AuthPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="비밀번호 (6자 이상)"
+                aria-label="비밀번호"
                 autoComplete={mode === "signin" ? "current-password" : "new-password"}
                 className={inputCls}
               />
-              <button
+              <Button
                 type="submit"
                 disabled={busy}
                 className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
               >
                 {busy ? "잠시만요…" : mode === "signin" ? "로그인" : "회원가입"}
-              </button>
+              </Button>
             </form>
 
             <p className="text-center text-xs text-muted-foreground">
               {mode === "signin" ? "계정이 없나요? " : "이미 계정이 있나요? "}
-              <button
+              <Button
+                variant="link"
+                className="h-auto p-0 font-semibold"
                 type="button"
                 onClick={() => {
                   setMode(mode === "signin" ? "signup" : "signin");
                   setMsg(null);
                 }}
-                className="font-semibold text-primary underline-offset-2 hover:underline"
               >
                 {mode === "signin" ? "회원가입" : "로그인"}
-              </button>
+              </Button>
             </p>
           </div>
         )}
 
         {msg && (
-          <p className={`mt-4 rounded-lg px-3 py-2 text-sm ${msg.kind === "error" ? "bg-sky-soft text-red-600" : "bg-sky-soft text-secondary-foreground"}`}>
+          <p role={msg.kind === "error" ? "alert" : "status"} className={`mt-4 rounded-lg px-3 py-2 text-sm ${msg.kind === "error" ? "bg-sky-soft text-destructive" : "bg-sky-soft text-secondary-foreground"}`}>
             {msg.text}
           </p>
         )}
