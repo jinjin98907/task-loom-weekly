@@ -8,6 +8,13 @@
       "when": 1792148125334,
       "tag": "0000_create_user_sync_data",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792148782472,
+      "tag": "0001_restrict_user_data_to_authenticated",
+      "breakpoints": true
     }
   ]
 }

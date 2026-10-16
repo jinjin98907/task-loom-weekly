@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canonical, decideStore, type CloudValue } from "./cloud-merge";
+import { canonical, decideStore, ownerAction, type CloudValue } from "./cloud-merge";
 
 const cloud = (value: unknown, at = "2026-10-16T00:00:00Z"): CloudValue => ({ value, at });
 
@@ -50,5 +50,18 @@ describe("decideStore", () => {
   it("둘 다 빈 값 → null", () => {
     expect(decideStore("dashboard", {}, cloud({}), undefined)).toBeNull();
     expect(decideStore("myClass", 0, cloud(0), undefined)).toBeNull();
+  });
+});
+
+// 규칙 9: 같은 브라우저에서 계정이 바뀌면 이전 계정 데이터를 올리지 않고 초기화한다
+describe("ownerAction", () => {
+  it("같은 계정 → ok", () => {
+    expect(ownerAction("user-a", "user-a")).toBe("ok");
+  });
+  it("처음 로그인(기록 없음) → ok", () => {
+    expect(ownerAction(null, "user-a")).toBe("ok");
+  });
+  it("다른 계정으로 로그인 → reset", () => {
+    expect(ownerAction("user-a", "user-b")).toBe("reset");
   });
 });
