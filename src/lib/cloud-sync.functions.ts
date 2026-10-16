@@ -36,14 +36,14 @@ export const pullSyncData = createServerFn({ method: "GET" })
     if (error) throw new Error(`Sync read failed: ${error.message}`);
     if (!data) return EMPTY_PULL;
     return {
-      dashboard: (data.dashboard as unknown) ?? null,
-      dashboardAt: data.dashboard_at ?? null,
-      yearly: (data.yearly as unknown) ?? null,
-      yearlyAt: data.yearly_at ?? null,
-      rules: (data.rules as unknown) ?? null,
-      rulesAt: data.rules_at ?? null,
-      myClass: data.my_class ?? null,
-      myClassAt: data.my_class_at ?? null,
+      dashboard: (data["dashboard"] as unknown) ?? null,
+      dashboardAt: (data["dashboard_at"] as string | null) ?? null,
+      yearly: (data["yearly"] as unknown) ?? null,
+      yearlyAt: (data["yearly_at"] as string | null) ?? null,
+      rules: (data["rules"] as unknown) ?? null,
+      rulesAt: (data["rules_at"] as string | null) ?? null,
+      myClass: (data["my_class"] as number | null) ?? null,
+      myClassAt: (data["my_class_at"] as string | null) ?? null,
     };
   });
 
