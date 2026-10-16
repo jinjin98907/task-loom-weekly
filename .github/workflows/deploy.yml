@@ -39,14 +39,20 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Check build output
+      - name: Prepare GitHub Pages
         run: |
-          for dir in dist .output; do
-            if [ -d "$dir" ]; then
-              find "$dir" -maxdepth 3 -type f | head -60
-            fi
-          done
+          if [ -f .output/public/_shell.html ]; then
+            cp .output/public/_shell.html .output/public/index.html
+          fi
 
+          if [ ! -f .output/public/index.html ]; then
+            echo "Error: index.html and _shell.html were not found."
+            find .output/public -maxdepth 3 -type f -name '*.html'
+            exit 1
+          fi
+
+          cp .output/public/index.html .output/public/404.html
+          touch .output/public/.nojekyll
 
 
       - name: Configure Pages
@@ -55,7 +61,8 @@ jobs:
       - name: Upload build
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: .output/public
+
 
       - name: Deploy
         id: deployment
