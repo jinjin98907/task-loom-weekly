@@ -189,6 +189,14 @@ function Dashboard() {
                     rows={1}
                     className="min-h-8 min-w-0 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
                   />
+                  <span />
+                  <textarea
+                    value={a.absentReason}
+                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, absentReason: v } })); }}
+                    placeholder="사유 입력"
+                    rows={1}
+                    className="min-h-7 min-w-0 w-full resize-y rounded-lg border border-sky-mid/70 bg-sky-soft/40 p-1.5 text-xs leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
+                  />
                 </label>
                 <label className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
                   <span className="text-[11px] font-semibold text-primary">지각</span>
@@ -199,6 +207,14 @@ function Dashboard() {
                     rows={1}
                     className="min-h-8 min-w-0 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
                   />
+                  <span />
+                  <textarea
+                    value={a.lateReason}
+                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, lateReason: v } })); }}
+                    placeholder="사유 입력"
+                    rows={1}
+                    className="min-h-7 min-w-0 w-full resize-y rounded-lg border border-sky-mid/70 bg-sky-soft/40 p-1.5 text-xs leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
+                  />
                 </label>
                 <label className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
                   <span className="text-[11px] font-semibold text-primary">교외 체험학습</span>
@@ -208,6 +224,14 @@ function Dashboard() {
                     placeholder="이름 입력"
                     rows={1}
                     className="min-h-8 min-w-0 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <span />
+                  <textarea
+                    value={a.tripReason}
+                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, tripReason: v } })); }}
+                    placeholder="사유 입력"
+                    rows={1}
+                    className="min-h-7 min-w-0 w-full resize-y rounded-lg border border-sky-mid/70 bg-sky-soft/40 p-1.5 text-xs leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
               </div>
