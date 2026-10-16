@@ -1,14 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 /** 클라우드(user_data 테이블)에서 로그인 사용자의 동기화 데이터를 읽어온다. */
 export type PullResult = {
-  dashboard: unknown;
+  dashboard: Json | null;
   dashboardAt: string | null;
-  yearly: unknown;
+  yearly: Json | null;
   yearlyAt: string | null;
-  rules: unknown;
+  rules: Json | null;
   rulesAt: string | null;
   myClass: number | null;
   myClassAt: string | null;
@@ -36,11 +36,11 @@ export const pullSyncData = createServerFn({ method: "GET" })
     if (error) throw new Error(`Sync read failed: ${error.message}`);
     if (!data) return EMPTY_PULL;
     return {
-      dashboard: (data["dashboard"] as unknown) ?? null,
+      dashboard: (data["dashboard"] as Json) ?? null,
       dashboardAt: (data["dashboard_at"] as string | null) ?? null,
-      yearly: (data["yearly"] as unknown) ?? null,
+      yearly: (data["yearly"] as Json) ?? null,
       yearlyAt: (data["yearly_at"] as string | null) ?? null,
-      rules: (data["rules"] as unknown) ?? null,
+      rules: (data["rules"] as Json) ?? null,
       rulesAt: (data["rules_at"] as string | null) ?? null,
       myClass: (data["my_class"] as number | null) ?? null,
       myClassAt: (data["my_class_at"] as string | null) ?? null,
