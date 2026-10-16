@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { BACKUP_KEYS, buildFullBackup, parseFullBackup } from "@/lib/full-backup";
 import { AppTabs } from "@/components/AppTabs";
 import { AutoTextarea } from "@/components/AutoTextarea";
 import { TodoList } from "@/components/TodoList";
@@ -113,10 +114,10 @@ function Dashboard() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <NavBtn onClick={() => {
-            const blob = new Blob([JSON.stringify(store, null, 2)], { type: "application/json" });
+            const blob = new Blob([JSON.stringify(buildFullBackup(localStorage), null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
-            a.href = url; a.download = `우리반-대시보드-백업-${keyOf(new Date())}.json`;
+            a.href = url; a.download = `우리반-통합-백업-${keyOf(new Date())}.json`;
             document.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => URL.revokeObjectURL(url), 30000);
           }}>💾 데이터 전체 백업</NavBtn>
@@ -126,9 +127,15 @@ function Dashboard() {
               const f = e.target.files?.[0]; e.target.value = "";
               if (!f) return;
               try {
-                const data = JSON.parse(await f.text());
-                if (typeof data !== "object" || data === null || Array.isArray(data)) throw new Error();
-                if (confirm("현재 데이터를 백업 파일 내용으로 바꿀까요?")) setStore(data);
+                const parsed = parseFullBackup(JSON.parse(await f.text()));
+                if (!parsed) throw new Error();
+                if (!confirm("현재 데이터를 백업 파일 내용으로 바꿀까요?")) return;
+                for (const [k, v] of Object.entries(parsed)) {
+                  const key = BACKUP_KEYS[k as keyof typeof BACKUP_KEYS];
+                  const old = localStorage.getItem(key);
+                  localStorage.setItem(key, v as string);
+                  window.dispatchEvent(new StorageEvent("storage", { key, oldValue: old, newValue: v as string }));
+                }
               } catch { alert("올바른 백업 파일이 아니에요."); }
             }} />
           </label>
