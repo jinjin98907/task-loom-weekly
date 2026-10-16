@@ -11,7 +11,7 @@ import {
   type SyncMarker,
 } from "@/lib/cloud-merge";
 import { pullSyncData, pushSyncData } from "@/lib/cloud-sync.functions";
-import { LOCAL_KEYS, MARKER_KEY, OWNER_KEY, prepareLocalOwner, releaseLocalOwner, notifyLocalOwnerChange } from "./cloud-local-owner";
+import { LOCAL_KEYS, MARKER_KEY, OWNER_KEY, prepareLocalOwner, notifyLocalOwnerChange } from "./cloud-local-owner";
 export { LOCAL_KEYS, MARKER_KEY } from "./cloud-local-owner";
 
 type LocalValues = Record<StoreName, unknown>;
