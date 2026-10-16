@@ -6,7 +6,7 @@ const inputCls = "min-w-0 w-full rounded-md border border-sky-mid bg-sky-soft/60
 
 export function AttendanceEntries({ label, names, reasons, onChange }: Props) {
   const list = toEntries(names, reasons);
-  const rows = list.length && (list[list.length - 1].name || list[list.length - 1].reason) ? [...list, { name: "", reason: "" }] : list.length ? list : [{ name: "", reason: "" }];
+  const rows = list.length && (list.at(-1)?.name || list.at(-1)?.reason) ? [...list, { name: "", reason: "" }] : list.length ? list : [{ name: "", reason: "" }];
   const set = (next: StudentEntry[]) => { const o = fromEntries(next); onChange(o.names, o.reasons); };
   return (
     <div className="grid grid-cols-[52px_minmax(0,1fr)] items-start gap-1">
