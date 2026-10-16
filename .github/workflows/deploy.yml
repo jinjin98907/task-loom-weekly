@@ -39,6 +39,15 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: Check build output
+        run: |
+          for dir in dist .output; do
+            if [ -d "$dir" ]; then
+              find "$dir" -maxdepth 3 -type f | head -60
+            fi
+          done
+
+
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
