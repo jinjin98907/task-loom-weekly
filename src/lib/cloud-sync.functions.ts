@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
 /** 클라우드(user_data 테이블)에서 로그인 사용자의 동기화 데이터를 읽어온다. */
 export type PullResult = {
@@ -93,7 +94,9 @@ export const pushSyncData = createServerFn({ method: "POST" })
       patch.my_class = data.myClass;
       patch.my_class_at = now;
     }
-    const { error } = await context.supabase.from("user_data").upsert(patch);
+    const { error } = await context.supabase
+      .from("user_data")
+      .upsert(patch as unknown as Database["public"]["Tables"]["user_data"]["Insert"]);
     if (error) throw new Error(`Sync write failed: ${error.message}`);
     return { ok: true };
   });
