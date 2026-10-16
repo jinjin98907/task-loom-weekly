@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useAccount } from "@/components/CloudSync";
 
 const TABS = [
   { to: "/", label: "🏫 주간 대시보드" },
@@ -9,27 +9,8 @@ const TABS = [
 ] as const;
 
 export function AppTabs() {
-  const [signedIn, setSignedIn] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    let unsub: (() => void) | undefined;
-    import("@/integrations/supabase/client")
-      .then(({ supabase }) => {
-        supabase.auth.getSession().then(({ data }) => {
-          if (active) setSignedIn(!!data.session);
-        });
-        const sub = supabase.auth.onAuthStateChange((_event, session) => {
-          if (active) setSignedIn(!!session);
-        });
-        unsub = () => sub.data.subscription.unsubscribe();
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-      unsub?.();
-    };
-  }, []);
+  const { user } = useAccount();
+  const signedIn = Boolean(user);
 
   return (
     <nav className="mb-4 flex flex-wrap items-center gap-1 border-b border-sky-mid">

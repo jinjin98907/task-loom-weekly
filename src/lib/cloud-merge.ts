@@ -18,6 +18,15 @@ export function emptyFor(store: StoreName): unknown {
 }
 
 export type CloudValue = { value: unknown; at: string | null };
+
+/**
+ * 같은 브라우저에서 다른 계정으로 로그인했는지 판단한다.
+ * "reset" 이면 이전 계정의 로컬 미러와 마커를 지우고 새 계정 데이터만 내려받아야 한다.
+ */
+export function ownerAction(previousOwner: string | null, userId: string): "reset" | "ok" {
+  if (!previousOwner) return "ok";
+  return previousOwner === userId ? "ok" : "reset";
+}
 export type StoreMarker = { at: string; pushed: string };
 export type SyncMarker = Partial<Record<StoreName, StoreMarker>>;
 export type Decision = "local" | "cloud" | null;

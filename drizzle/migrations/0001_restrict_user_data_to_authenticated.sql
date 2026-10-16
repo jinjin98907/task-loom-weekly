@@ -1,0 +1,2 @@
+REVOKE ALL ON public.user_data FROM anon;
+COMMENT ON TABLE public.user_data IS 'Per-user cloud mirror. Readable and writable only by the owning authenticated user (RLS: user_id = auth.uid()); anonymous access revoked.';
