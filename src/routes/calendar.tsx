@@ -53,26 +53,6 @@ function CalendarPage() {
   const show = (t: Todo) => filter === "all" || (filter === "open" ? !t.done : t.tag === filter);
   const move = (n: number) => setYm(({ y, m }) => { const d = new Date(y, m + n, 1); return { y: d.getFullYear(), m: d.getMonth() }; });
 
-  const backup = () => {
-    const data = { app: "teacher-all", v: 1, dashboard: store,
-      yearly: JSON.parse(localStorage.getItem(ALL_KEYS.yearly) || "{}"),
-      rules: JSON.parse(localStorage.getItem(ALL_KEYS.rules) || "[]") };
-    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
-    const a = document.createElement("a"); a.href = url; a.download = `우리반-전체-백업-${todayKey}.json`;
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
-  };
-  const restore = async (f: File) => {
-    try {
-      const d = JSON.parse(await f.text());
-      if (!d || typeof d !== "object" || Array.isArray(d)) throw new Error();
-      if (!confirm("현재 데이터를 백업 파일 내용으로 바꿀까요?")) return;
-      if (d.app === "teacher-all") {
-        localStorage.setItem(ALL_KEYS.yearly, JSON.stringify(d.yearly ?? {}));
-        localStorage.setItem(ALL_KEYS.rules, JSON.stringify(d.rules ?? []));
-        setStore(d.dashboard ?? {});
-      } else setStore(d); // 주간 대시보드 백업 파일
-    } catch { alert("올바른 백업 파일이 아니에요."); }
-  };
 
   const btn = "rounded-lg border border-sky-mid bg-card px-3 py-1.5 text-sm font-semibold text-secondary-foreground hover:bg-sky-soft";
 
@@ -92,10 +72,6 @@ function CalendarPage() {
             <option value="all">전체 보기</option><option value="open">미완료만</option>
             <option value="important">중요만</option><option value="deadline">마감만</option>
           </select>
-          <button className={btn} onClick={backup}>💾 전체 데이터 백업</button>
-          <label className={`${btn} cursor-pointer`}>📂 복원
-            <input type="file" accept="application/json,.json" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) restore(f); }} />
-          </label>
         </div>
       </header>
       <p className="mb-2 flex gap-3 text-xs text-muted-foreground">
