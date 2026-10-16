@@ -30,15 +30,15 @@ jobs:
         with:
           node-version: 22
 
-      - name: Update npm
-        run: npm install -g npm@11
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm install
-   
+        run: bun install --frozen-lockfile
 
       - name: Build
-        run: npm run build
+        run: bun run build
+
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
