@@ -40,6 +40,6 @@ export const toEntries = (names: string, reasons: string): StudentEntry[] => {
 
 export const fromEntries = (list: StudentEntry[]): { names: string; reasons: string } => {
   const clean = list.map((e) => ({ name: e.name.replace(/\n/g, " "), reason: e.reason.replace(/\n/g, " ") }));
-  while (clean.length && !clean[clean.length - 1].name && !clean[clean.length - 1].reason) clean.pop();
+  while (clean.length && !clean.at(-1)?.name && !clean.at(-1)?.reason) clean.pop();
   return { names: clean.map((e) => e.name).join("\n"), reasons: clean.map((e) => e.reason).join("\n") };
 };
