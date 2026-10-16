@@ -57,8 +57,14 @@ function Dashboard() {
     };
     readShared();
     setLoaded(true);
-    // 다른 창/탭에서 학년 시간표를 고치면 즉시 반영
-    const onStorage = (e: StorageEvent) => { if (!e.key || e.key === YEARLY_KEY || e.key === MY_CLASS_KEY || e.key === "teacher-yearly-color-rules-v1") readShared(); };
+    // 다른 창/탭에서 학년 시간표를 고치거나 클라우드 동기화가 데이터를 내려오면 즉시 반영
+    const onStorage = (e: StorageEvent) => {
+      if (!e.key) return;
+      if (e.key === KEY) {
+        try { setStore(JSON.parse(e.newValue || "{}")); } catch {}
+      }
+      if (e.key === YEARLY_KEY || e.key === MY_CLASS_KEY || e.key === "teacher-yearly-color-rules-v1") readShared();
+    };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
