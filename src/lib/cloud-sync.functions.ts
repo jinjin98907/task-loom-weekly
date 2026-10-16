@@ -79,20 +79,20 @@ export const pushSyncData = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
     const patch: Record<string, unknown> = { user_id: context.userId, updated_at: now };
     if (data.dashboard !== undefined) {
-      patch.dashboard = data.dashboard;
-      patch.dashboard_at = now;
+      patch["dashboard"] = data.dashboard;
+      patch["dashboard_at"] = now;
     }
     if (data.yearly !== undefined) {
-      patch.yearly = data.yearly;
-      patch.yearly_at = now;
+      patch["yearly"] = data.yearly;
+      patch["yearly_at"] = now;
     }
     if (data.rules !== undefined) {
-      patch.rules = data.rules;
-      patch.rules_at = now;
+      patch["rules"] = data.rules;
+      patch["rules_at"] = now;
     }
     if (data.myClass !== undefined) {
-      patch.my_class = data.myClass;
-      patch.my_class_at = now;
+      patch["my_class"] = data.myClass;
+      patch["my_class_at"] = now;
     }
     const { error } = await context.supabase
       .from("user_data")
