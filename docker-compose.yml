@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  task-loom-web:
+    image: task-loom-weekly:latest
+    build: .
+    container_name: task-loom-app
+    restart: always
+    ports:
+      - "8080:80"  # NAS의 8080 포트와 내부 80 포트 연결
