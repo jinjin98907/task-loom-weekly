@@ -55,7 +55,10 @@ export const pushSyncData = createServerFn({ method: "POST" })
       throw new Error("Invalid sync payload");
     }
     const d = input as Record<string, unknown>;
-    const out: { dashboard?: unknown; yearly?: unknown; rules?: unknown; myClass?: number } = {};
+    if (typeof d["expectedUserId"] !== "string" || !d["expectedUserId"]) throw new Error("Missing sync owner");
+    const out: { expectedUserId: string; dashboard?: unknown; yearly?: unknown; rules?: unknown; myClass?: number } = {
+      expectedUserId: d["expectedUserId"],
+    };
     if (d["dashboard"] !== undefined) {
       if (d["dashboard"] === null || typeof d["dashboard"] !== "object" || Array.isArray(d["dashboard"])) throw new Error("Invalid dashboard");
       out.dashboard = d["dashboard"];
@@ -76,6 +79,7 @@ export const pushSyncData = createServerFn({ method: "POST" })
     return out;
   })
   .handler(async ({ data, context }) => {
+    if (data.expectedUserId !== context.userId) throw new Error("Sync account changed; retry for the current user");
     const now = new Date().toISOString();
     const patch: Record<string, unknown> = { user_id: context.userId, updated_at: now };
     if (data.dashboard !== undefined) {

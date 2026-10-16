@@ -11,15 +11,8 @@ import {
   type SyncMarker,
 } from "@/lib/cloud-merge";
 import { pullSyncData, pushSyncData } from "@/lib/cloud-sync.functions";
-
-export const MARKER_KEY = "teacher-cloud-sync-marker-v1";
-
-export const LOCAL_KEYS: Record<StoreName, string> = {
-  dashboard: "teacher-dashboard-v1",
-  yearly: "teacher-yearly-timetable-v1",
-  rules: "teacher-yearly-color-rules-v1",
-  myClass: "teacher-my-class-v1",
-};
+import { LOCAL_KEYS, MARKER_KEY, OWNER_KEY, prepareLocalOwner, releaseLocalOwner, notifyLocalOwnerChange } from "./cloud-local-owner";
+export { LOCAL_KEYS, MARKER_KEY } from "./cloud-local-owner";
 
 type LocalValues = Record<StoreName, unknown>;
 
@@ -76,14 +69,21 @@ function writeLocal(writes: Partial<Record<StoreName, unknown>>) {
 export type SyncOutcome = { pulled: StoreName[]; pushed: StoreName[] };
 
 /** 지금 즉시 한 번 동기화 (로그인 직후 등). 세션이 없으면 아무 것도 하지 않는다. */
-export async function syncNow(): Promise<SyncOutcome> {
+async function performSync(): Promise<SyncOutcome> {
   const { supabase } = await import("@/integrations/supabase/client");
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) return { pulled: [], pushed: [] };
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) return { pulled: [], pushed: [] };
+  const userId = data.user.id;
+  const currentUser = async () => {
+    const { data: verified, error: verifyError } = await supabase.auth.getUser();
+    return !verifyError && verified.user?.id === userId && localStorage.getItem(OWNER_KEY) === userId;
+  };
+  if (prepareLocalOwner(localStorage, userId)) notifyLocalOwnerChange();
 
   const local = readLocal();
   const marker = readMarker();
   const cloud = await pullSyncData();
+  if (!await currentUser()) return { pulled: [], pushed: [] };
   const cloudMap: Record<StoreName, { value: unknown; at: string | null } | null> = {
     dashboard: cloud.dashboardAt ? { value: cloud.dashboard, at: cloud.dashboardAt } : null,
     yearly: cloud.yearlyAt ? { value: cloud.yearly, at: cloud.yearlyAt } : null,
@@ -96,7 +96,10 @@ export async function syncNow(): Promise<SyncOutcome> {
   for (const s of STORES) {
     const d = decideStore(s, local[s], cloudMap[s], marker[s]);
     if (d === "local") pushes[s] = local[s];
-    else if (d === "cloud" && cloudMap[s]) writes[s] = cloudMap[s]!.value;
+    else if (d === "cloud") {
+      const cm = cloudMap[s];
+      if (cm) writes[s] = cm.value;
+    }
   }
 
   const outcome: SyncOutcome = {
@@ -104,7 +107,12 @@ export async function syncNow(): Promise<SyncOutcome> {
     pushed: STORES.filter((s) => pushes[s] !== undefined),
   };
   if (outcome.pulled.length) writeLocal(writes);
-  if (outcome.pushed.length) await pushSyncData({ data: pushes });
+  if (outcome.pushed.length) {
+    if (!await currentUser()) return { pulled: [], pushed: [] };
+    // The server also compares this expected owner with the verified bearer subject.
+    await pushSyncData({ data: { ...pushes, expectedUserId: userId } });
+  }
+  if (!await currentUser()) return { pulled: [], pushed: [] };
 
   // 마커 갱신: 쓰기 반영 후 값(메모리 기준 — 다른 탭 쓰기와의 경합을 피함)
   const after: LocalValues = { ...local, ...writes };
@@ -118,7 +126,8 @@ export async function syncNow(): Promise<SyncOutcome> {
     } else if (writes[s] !== undefined && cm?.at) {
       next[s] = { at: cm.at, pushed: canonical(after[s]) };
     } else if (marker[s]) {
-      next[s] = marker[s]!;
+      const existing = marker[s];
+      if (existing) next[s] = existing;
     } else if (cm?.at) {
       next[s] = { at: cm.at, pushed: canonical(after[s]) };
     }
@@ -127,17 +136,24 @@ export async function syncNow(): Promise<SyncOutcome> {
   return outcome;
 }
 
+let inFlight: Promise<SyncOutcome> | null = null;
+export function syncNow(): Promise<SyncOutcome> {
+  if (inFlight) return inFlight;
+  inFlight = performSync().finally(() => { inFlight = null; });
+  return inFlight;
+}
+
 let loopStarted = false;
 
 /** 앱 전체 자동 동기화 루프 시작 (중복 시작 방지). 정리 함수를 반환한다. */
 export function startSyncLoop(): () => void {
   if (loopStarted) return () => {};
   loopStarted = true;
-  let stopped = false;
-
   const run = () => syncNow().catch((e) => console.warn("[sync]", e));
   const every = setInterval(run, 5000);
-  const onStorage = () => run(); // 다른 탭에서 데이터 변경 → 즉시 밀어 올림
+  const onStorage = (event: StorageEvent) => {
+    if (event.key && Object.values(LOCAL_KEYS).includes(event.key)) run();
+  };
   const onVisible = () => {
     if (document.visibilityState === "visible") run();
   };
@@ -146,7 +162,6 @@ export function startSyncLoop(): () => void {
   run();
 
   return () => {
-    stopped = true;
     loopStarted = false;
     clearInterval(every);
     window.removeEventListener("storage", onStorage);
