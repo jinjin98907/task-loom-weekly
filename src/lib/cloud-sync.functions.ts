@@ -56,20 +56,20 @@ export const pushSyncData = createServerFn({ method: "POST" })
     }
     const d = input as Record<string, unknown>;
     const out: { dashboard?: unknown; yearly?: unknown; rules?: unknown; myClass?: number } = {};
-    if (d.dashboard !== undefined) {
-      if (d.dashboard === null || typeof d.dashboard !== "object" || Array.isArray(d.dashboard)) throw new Error("Invalid dashboard");
-      out.dashboard = d.dashboard;
+    if (d["dashboard"] !== undefined) {
+      if (d["dashboard"] === null || typeof d["dashboard"] !== "object" || Array.isArray(d["dashboard"])) throw new Error("Invalid dashboard");
+      out.dashboard = d["dashboard"];
     }
-    if (d.yearly !== undefined) {
-      if (d.yearly === null || typeof d.yearly !== "object" || Array.isArray(d.yearly)) throw new Error("Invalid yearly");
-      out.yearly = d.yearly;
+    if (d["yearly"] !== undefined) {
+      if (d["yearly"] === null || typeof d["yearly"] !== "object" || Array.isArray(d["yearly"])) throw new Error("Invalid yearly");
+      out.yearly = d["yearly"];
     }
-    if (d.rules !== undefined) {
-      if (!Array.isArray(d.rules)) throw new Error("Invalid rules");
-      out.rules = d.rules;
+    if (d["rules"] !== undefined) {
+      if (!Array.isArray(d["rules"])) throw new Error("Invalid rules");
+      out.rules = d["rules"];
     }
-    if (d.myClass !== undefined) {
-      const n = Number(d.myClass);
+    if (d["myClass"] !== undefined) {
+      const n = Number(d["myClass"]);
       if (!Number.isInteger(n) || n < 0 || n > 2) throw new Error("Invalid myClass");
       out.myClass = n;
     }
