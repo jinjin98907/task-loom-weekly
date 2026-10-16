@@ -10,13 +10,36 @@ describe("기간별 출결 모아보기", () => {
       "2026-10-15": { attendance: { absent: "테스트 학생 A", late: "테스트 학생 B" } },
     };
     expect(attendanceInRange(store, "2026-10-15", "2026-10-16")).toEqual([
-      { date: "2026-10-15", absent: "테스트 학생 A", late: "테스트 학생 B", trip: "" },
-      { date: "2026-10-16", absent: "", late: "", trip: "테스트 학생 C" },
+      {
+        date: "2026-10-15",
+        absent: "테스트 학생 A",
+        late: "테스트 학생 B",
+        trip: "",
+        absentReason: "",
+        lateReason: "",
+        tripReason: "",
+      },
+      {
+        date: "2026-10-16",
+        absent: "",
+        late: "",
+        trip: "테스트 학생 C",
+        absentReason: "",
+        lateReason: "",
+        tripReason: "",
+      },
     ]);
   });
 
-  it("하루만 선택해도 결석·지각·교외 체험학습 원문과 줄바꿈을 유지한다", () => {
-    const attendance = { absent: "학생 A\n학생 B", late: "학생 C", trip: "학생 D (오전)" };
+  it("하루만 선택해도 결석·지각·교외 체험학습 원문, 사유, 줄바꿈을 유지한다", () => {
+    const attendance = {
+      absent: "학생 A\n학생 B",
+      late: "학생 C",
+      trip: "학생 D (오전)",
+      absentReason: "독감",
+      lateReason: "",
+      tripReason: "가족 여행",
+    };
     expect(attendanceInRange({ "2026-10-15": { attendance } }, "2026-10-15", "2026-10-15"))
       .toEqual([{ date: "2026-10-15", ...attendance }]);
   });
