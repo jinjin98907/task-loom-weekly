@@ -6,7 +6,7 @@ export const BACKUP_KEYS = {
   myClass: "teacher-my-class-v1",
 } as const;
 
-type Obj = Record<string, unknown>;
+type Obj = { app?: unknown; dashboard?: unknown; yearly?: unknown; rules?: unknown; myClass?: unknown; cells?: unknown; [k: string]: unknown };
 const isObj = (v: unknown): v is Obj => !!v && typeof v === "object" && !Array.isArray(v);
 const read = (s: Pick<Storage, "getItem">, k: string, fb: unknown) => {
   try { const r = s.getItem(k); return r == null ? fb : JSON.parse(r); } catch { return fb; }
