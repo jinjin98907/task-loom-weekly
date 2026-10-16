@@ -6,3 +6,5 @@
 - [x] Connect Lovable Cloud and add sign-in (Google / Lovable / email).
 - [x] Add cloud sync for dashboard, yearly timetable, color rules and my-class (LocalStorage stays primary; cloud mirrors it, last-write-wins per store).
 - [x] Verify sync end to end: sign in → edit on dashboard → pushed to cloud; fresh device with empty storage → data pulled back automatically.
+- [ ] Verify email/password authentication and enforce authenticated owner-only read/write access, without adding profiles.
+- [ ] Verify signed-in storage isolation and cross-user/anonymous access denial.
