@@ -6,6 +6,7 @@ import { subjectFit } from "@/lib/subject-fit";
 
 import { useEffect, useMemo, useState } from "react";
 import { type Attendance, emptyAttendance, normalizeAttendance } from "@/lib/attendance";
+import { AttendanceEntries } from "@/components/AttendanceEntries";
 import { normalizeNotices, type Todo } from "@/lib/day-data";
 import { normalizeRules, styleFor, type ColorRule } from "@/lib/keyword-colors";
 import { cellKey, MY_CLASS_KEY, normalizeClass, setSubject, subjectFor, YEARLY_KEY, type YCells } from "@/lib/class-sync";
@@ -179,61 +180,10 @@ function Dashboard() {
         <Row label="👤 출결" cols={cols}>
           {days.map((d) => { const k = keyOf(d); const a = get(k).attendance; return (
             <Cell key={k} today={k === todayKey}>
-              <div className="space-y-1">
-                <label className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                  <span className="text-[11px] font-semibold text-primary">결석</span>
-                  <textarea
-                    value={a.absent}
-                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, absent: v } })); }}
-                    placeholder="이름 입력"
-                    rows={1}
-                    className="min-h-8 min-w-0 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <span />
-                  <textarea
-                    value={a.absentReason}
-                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, absentReason: v } })); }}
-                    placeholder="사유 입력"
-                    rows={1}
-                    className="min-h-7 min-w-0 w-full resize-y rounded-lg border border-sky-mid/70 bg-sky-soft/40 p-1.5 text-xs leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </label>
-                <label className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                  <span className="text-[11px] font-semibold text-primary">지각</span>
-                  <textarea
-                    value={a.late}
-                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, late: v } })); }}
-                    placeholder="이름 입력"
-                    rows={1}
-                    className="min-h-8 min-w-0 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <span />
-                  <textarea
-                    value={a.lateReason}
-                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, lateReason: v } })); }}
-                    placeholder="사유 입력"
-                    rows={1}
-                    className="min-h-7 min-w-0 w-full resize-y rounded-lg border border-sky-mid/70 bg-sky-soft/40 p-1.5 text-xs leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </label>
-                <label className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-1">
-                  <span className="text-[11px] font-semibold text-primary">교외 체험학습</span>
-                  <textarea
-                    value={a.trip}
-                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, trip: v } })); }}
-                    placeholder="이름 입력"
-                    rows={1}
-                    className="min-h-8 min-w-0 w-full resize-y rounded-lg border border-sky-mid bg-sky-soft/60 p-1.5 text-sm leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <span />
-                  <textarea
-                    value={a.tripReason}
-                    onChange={(e) => { const v = e.target.value; update(k, (x) => ({ ...x, attendance: { ...x.attendance, tripReason: v } })); }}
-                    placeholder="사유 입력"
-                    rows={1}
-                    className="min-h-7 min-w-0 w-full resize-y rounded-lg border border-sky-mid/70 bg-sky-soft/40 p-1.5 text-xs leading-snug text-foreground outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </label>
+              <div className="space-y-1.5">
+                <AttendanceEntries label="결석" names={a.absent} reasons={a.absentReason} onChange={(n, r) => update(k, (x) => ({ ...x, attendance: { ...x.attendance, absent: n, absentReason: r } }))} />
+                <AttendanceEntries label="지각" names={a.late} reasons={a.lateReason} onChange={(n, r) => update(k, (x) => ({ ...x, attendance: { ...x.attendance, late: n, lateReason: r } }))} />
+                <AttendanceEntries label="체험학습" names={a.trip} reasons={a.tripReason} onChange={(n, r) => update(k, (x) => ({ ...x, attendance: { ...x.attendance, trip: n, tripReason: r } }))} />
               </div>
             </Cell>
           ); })}

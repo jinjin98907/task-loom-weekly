@@ -1,3 +1,4 @@
+import { toEntries } from "@/lib/attendance";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Users } from "lucide-react";
@@ -103,7 +104,7 @@ function AttendancePage() {
                   return <tr key={row.date} className="border-b border-sky-mid/60 hover:bg-sky-soft/30">
                     <th scope="row" className="px-2 py-4 text-left align-top font-medium text-secondary-foreground md:px-4"><time dateTime={row.date}>{row.date}<span className="mt-1 block text-xs text-muted-foreground">({"일월화수목금토"[day.getDay()]})</span></time></th>
                     {cols.map((col, i) => <td key={i} className="whitespace-pre-wrap break-words px-2 py-4 align-top text-foreground md:px-4">
-                      {col.name.trim() ? <>{col.name}{col.reason.trim() && <span className="mt-0.5 block text-xs text-muted-foreground">{col.reason}</span>}</> : <span className="text-muted-foreground">—</span>}
+                      {col.name.trim() ? <ul className="space-y-1">{toEntries(col.name, col.reason).filter((e) => e.name.trim() || e.reason.trim()).map((e, j) => <li key={j}>{e.name}{e.reason.trim() && <span className="ml-1 text-xs text-muted-foreground">({e.reason})</span>}</li>)}</ul> : <span className="text-muted-foreground">—</span>}
                     </td>)}
                   </tr>;
                 })}
