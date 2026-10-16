@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AttendanceRouteImport } from './routes/attendance'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as YearlyRouteImport } from './routes/yearly'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const AttendanceRoute = AttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarRoute = CalendarRouteImport.update({
@@ -38,12 +44,14 @@ const YearlyRoute = YearlyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
+  '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
   '/yearly': typeof YearlyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
+  '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
   '/yearly': typeof YearlyRoute
 }
@@ -51,20 +59,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
+  '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
   '/yearly': typeof YearlyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/attendance' | '/calendar' | '/yearly'
+  fullPaths: '/' | '/attendance' | '/auth' | '/calendar' | '/yearly'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/attendance' | '/calendar' | '/yearly'
-  id: '__root__' | '/' | '/attendance' | '/calendar' | '/yearly'
+  to: '/' | '/attendance' | '/auth' | '/calendar' | '/yearly'
+  id: '__root__' | '/' | '/attendance' | '/auth' | '/calendar' | '/yearly'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AttendanceRoute: typeof AttendanceRoute
+  AuthRoute: typeof AuthRoute
   CalendarRoute: typeof CalendarRoute
   YearlyRoute: typeof YearlyRoute
 }
@@ -83,6 +93,13 @@ declare module '@tanstack/react-router' {
       path: '/attendance'
       fullPath: '/attendance'
       preLoaderRoute: typeof AttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar': {
@@ -105,6 +122,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AttendanceRoute: AttendanceRoute,
+  AuthRoute: AuthRoute,
   CalendarRoute: CalendarRoute,
   YearlyRoute: YearlyRoute,
 }
