@@ -23,3 +23,11 @@ describe("full backup", () => {
     expect(parseFullBackup([])).toBeNull();
   });
 });
+
+describe("memo backup", () => {
+  it("includes and restores memos", () => {
+    const b = buildFullBackup(mem({ "teacher-memos-v2": '[{"id":"a","title":"t","text":"x"}]' }));
+    expect(b.memo).toEqual([{ id: "a", title: "t", text: "x" }]);
+    expect(parseFullBackup({ app: "teacher-all", memo: [{ id: "a" }] })?.memo).toBe('[{"id":"a"}]');
+  });
+});

@@ -12,6 +12,8 @@ export type PullResult = {
   rulesAt: string | null;
   myClass: number | null;
   myClassAt: string | null;
+  memo: Json | null;
+  memoAt: string | null;
 };
 
 const EMPTY_PULL: PullResult = {
@@ -23,6 +25,8 @@ const EMPTY_PULL: PullResult = {
   rulesAt: null,
   myClass: null,
   myClassAt: null,
+  memo: null,
+  memoAt: null,
 };
 
 export const pullSyncData = createServerFn({ method: "GET" })
@@ -30,7 +34,7 @@ export const pullSyncData = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<PullResult> => {
     const { data, error } = await context.supabase
       .from("user_data")
-      .select("dashboard, dashboard_at, yearly, yearly_at, rules, rules_at, my_class, my_class_at")
+      .select("dashboard, dashboard_at, yearly, yearly_at, rules, rules_at, my_class, my_class_at, memo, memo_at")
       .eq("user_id", context.userId)
       .maybeSingle();
     if (error) throw new Error(`Sync read failed: ${error.message}`);
@@ -44,6 +48,8 @@ export const pullSyncData = createServerFn({ method: "GET" })
       rulesAt: (data["rules_at"] as string | null) ?? null,
       myClass: (data["my_class"] as number | null) ?? null,
       myClassAt: (data["my_class_at"] as string | null) ?? null,
+      memo: (data["memo"] as Json) ?? null,
+      memoAt: (data["memo_at"] as string | null) ?? null,
     };
   });
 
@@ -56,7 +62,7 @@ export const pushSyncData = createServerFn({ method: "POST" })
     }
     const d = input as Record<string, unknown>;
     if (typeof d["expectedUserId"] !== "string" || !d["expectedUserId"]) throw new Error("Missing sync owner");
-    const out: { expectedUserId: string; dashboard?: unknown; yearly?: unknown; rules?: unknown; myClass?: number } = {
+    const out: { expectedUserId: string; dashboard?: unknown; yearly?: unknown; rules?: unknown; myClass?: number; memo?: unknown } = {
       expectedUserId: d["expectedUserId"],
     };
     if (d["dashboard"] !== undefined) {
@@ -70,6 +76,10 @@ export const pushSyncData = createServerFn({ method: "POST" })
     if (d["rules"] !== undefined) {
       if (!Array.isArray(d["rules"])) throw new Error("Invalid rules");
       out.rules = d["rules"];
+    }
+    if (d["memo"] !== undefined) {
+      if (!Array.isArray(d["memo"])) throw new Error("Invalid memo");
+      out.memo = d["memo"];
     }
     if (d["myClass"] !== undefined) {
       const n = Number(d["myClass"]);
@@ -97,6 +107,10 @@ export const pushSyncData = createServerFn({ method: "POST" })
     if (data.myClass !== undefined) {
       patch["my_class"] = data.myClass;
       patch["my_class_at"] = now;
+    }
+    if (data.memo !== undefined) {
+      patch["memo"] = data.memo;
+      patch["memo_at"] = now;
     }
     const { error } = await context.supabase
       .from("user_data")

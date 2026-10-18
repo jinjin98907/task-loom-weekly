@@ -7,6 +7,7 @@ export const LOCAL_KEYS: Record<StoreName, string> = {
   yearly: "teacher-yearly-timetable-v1",
   rules: "teacher-yearly-color-rules-v1",
   myClass: "teacher-my-class-v1",
+  memo: "teacher-memos-v2",
 };
 const ACTIVE_KEYS = [...STORES.map((s) => LOCAL_KEYS[s]), MARKER_KEY];
 const archiveKey = (id: string) => `teacher-cloud-local-account-v1:${id}`;

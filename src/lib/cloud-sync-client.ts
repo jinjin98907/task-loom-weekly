@@ -89,6 +89,7 @@ async function performSync(): Promise<SyncOutcome> {
     yearly: cloud.yearlyAt ? { value: cloud.yearly, at: cloud.yearlyAt } : null,
     rules: cloud.rulesAt ? { value: cloud.rules, at: cloud.rulesAt } : null,
     myClass: cloud.myClassAt ? { value: cloud.myClass, at: cloud.myClassAt } : null,
+    memo: cloud.memoAt ? { value: cloud.memo, at: cloud.memoAt } : null,
   };
 
   const writes: Partial<Record<StoreName, unknown>> = {};

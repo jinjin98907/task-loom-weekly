@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useAccount } from "@/components/CloudSync";
+import { toggleMemo } from "@/components/MemoSplit";
 
 const TABS = [
   { to: "/", label: "🏫 주간 대시보드" },
@@ -23,13 +24,14 @@ export function AppTabs() {
           </Link>
         ))}
       </div>
-      <Link
-        to="/memo"
+      <button
+        type="button"
+        onClick={toggleMemo}
+        title="메모장을 옆에 열거나 닫기"
         className="ml-auto -mb-px rounded-t-lg border border-transparent px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-sky-soft"
-        activeProps={{ className: "border-sky-mid border-b-background bg-background text-primary" }}
       >
         📝 메모장
-      </Link>
+      </button>
       <Link
         to="/auth"
         className={`-mb-px rounded-t-lg border border-transparent px-4 py-2 text-sm font-semibold hover:bg-sky-soft ${signedIn ? "text-primary" : "text-muted-foreground"}`}

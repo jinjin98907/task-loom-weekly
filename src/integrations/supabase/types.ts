@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           dashboard: Json
           dashboard_at: string
+          memo: Json | null
+          memo_at: string | null
           my_class: number
           my_class_at: string
           rules: Json
@@ -30,6 +32,8 @@ export type Database = {
         Insert: {
           dashboard?: Json
           dashboard_at?: string
+          memo?: Json | null
+          memo_at?: string | null
           my_class?: number
           my_class_at?: string
           rules?: Json
@@ -42,6 +46,8 @@ export type Database = {
         Update: {
           dashboard?: Json
           dashboard_at?: string
+          memo?: Json | null
+          memo_at?: string | null
           my_class?: number
           my_class_at?: string
           rules?: Json

@@ -2,8 +2,8 @@
 // 로컬(LocalStorage)이 기본 저장소이고 클라우드는 미러.
 // 충돌 규칙: 마지막 동기화 시점 이후 바뀐 쪽이 이긴다 (last-write-wins).
 
-export type StoreName = "dashboard" | "yearly" | "rules" | "myClass";
-export const STORES: StoreName[] = ["dashboard", "yearly", "rules", "myClass"];
+export type StoreName = "dashboard" | "yearly" | "rules" | "myClass" | "memo";
+export const STORES: StoreName[] = ["dashboard", "yearly", "rules", "myClass", "memo"];
 
 /** 로컬 저장소의 빈 값(초기 상태). myClass는 클라우드와 비교하기 위해 숫자로 정규화한다. */
 export const EMPTY_LOCAL: Record<StoreName, unknown> = {
@@ -11,6 +11,7 @@ export const EMPTY_LOCAL: Record<StoreName, unknown> = {
   yearly: {},
   rules: [],
   myClass: 0,
+  memo: [],
 };
 
 export function emptyFor(store: StoreName): unknown {
