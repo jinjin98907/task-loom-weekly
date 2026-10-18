@@ -14,7 +14,6 @@ import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as MemoRouteImport } from './routes/memo'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as YearlyRouteImport } from './routes/yearly'
 
 const IndexRoute = IndexRouteImport.update({
@@ -42,11 +41,6 @@ const MemoRoute = MemoRouteImport.update({
   path: '/memo',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const YearlyRoute = YearlyRouteImport.update({
   id: '/yearly',
   path: '/yearly',
@@ -59,7 +53,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
   '/memo': typeof MemoRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/yearly': typeof YearlyRoute
 }
 export interface FileRoutesByTo {
@@ -68,7 +61,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
   '/memo': typeof MemoRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/yearly': typeof YearlyRoute
 }
 export interface FileRoutesById {
@@ -78,28 +70,13 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
   '/memo': typeof MemoRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/yearly': typeof YearlyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/attendance'
-    | '/auth'
-    | '/calendar'
-    | '/memo'
-    | '/reset-password'
-    | '/yearly'
+  fullPaths: '/' | '/attendance' | '/auth' | '/calendar' | '/memo' | '/yearly'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/attendance'
-    | '/auth'
-    | '/calendar'
-    | '/memo'
-    | '/reset-password'
-    | '/yearly'
+  to: '/' | '/attendance' | '/auth' | '/calendar' | '/memo' | '/yearly'
   id:
     | '__root__'
     | '/'
@@ -107,7 +84,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/calendar'
     | '/memo'
-    | '/reset-password'
     | '/yearly'
   fileRoutesById: FileRoutesById
 }
@@ -117,7 +93,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CalendarRoute: typeof CalendarRoute
   MemoRoute: typeof MemoRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
   YearlyRoute: typeof YearlyRoute
 }
 
@@ -158,13 +133,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MemoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/yearly': {
       id: '/yearly'
       path: '/yearly'
@@ -181,7 +149,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CalendarRoute: CalendarRoute,
   MemoRoute: MemoRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
   YearlyRoute: YearlyRoute,
 }
 export const routeTree = rootRouteImport
