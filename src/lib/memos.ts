@@ -23,7 +23,11 @@ export function normalizeMemos(raw: unknown): Memo[] {
     });
   // 부모가 사라진 페이지는 최상위로 올린다.
   const ids = new Set(list.map((m) => m.id));
-  return list.map((m) => (m.parentId && (!ids.has(m.parentId) || m.parentId === m.id) ? { ...m, parentId: undefined } : m));
+  return list.map((m) => {
+    if (!m.parentId || (ids.has(m.parentId) && m.parentId !== m.id)) return m;
+    const { parentId: _drop, ...rest } = m;
+    return rest;
+  });
 }
 
 /** 저장된 메모 목록을 읽는다. 예전 한 칸짜리 메모가 있으면 첫 메모로 옮긴다. */
