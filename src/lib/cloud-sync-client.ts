@@ -13,6 +13,23 @@ import {
 import { pullSyncData, pushSyncData } from "@/lib/cloud-sync.functions";
 import { LOCAL_KEYS, MARKER_KEY, OWNER_KEY, prepareLocalOwner, notifyLocalOwnerChange } from "./cloud-local-owner";
 export { LOCAL_KEYS, MARKER_KEY } from "./cloud-local-owner";
+import { loadKey, encryptStore, decryptStore, isEncryptedValue, deriveKey, saveKey, notifyE2eeChange } from "./e2ee";
+
+/** 비밀번호로 이 기기의 암호화 열쇠를 만든다. 클라우드에 다른 열쇠로 잠긴 데이터가 있으면 false. */
+export async function unlockEncryption(password: string): Promise<boolean> {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return false;
+  const key = await deriveKey(password, data.user.id);
+  const cloud = await pullSyncData();
+  for (const v of [cloud.dashboard, cloud.yearly, cloud.rules, cloud.memo]) {
+    if (!isEncryptedValue(v)) continue;
+    try { await decryptStore(v, key); } catch { return false; }
+  }
+  await saveKey(localStorage, data.user.id, key);
+  notifyE2eeChange();
+  return true;
+}
 
 type LocalValues = Record<StoreName, unknown>;
 
@@ -79,6 +96,9 @@ async function performSync(): Promise<SyncOutcome> {
     return !verifyError && verified.user?.id === userId && localStorage.getItem(OWNER_KEY) === userId;
   };
   if (prepareLocalOwner(localStorage, userId)) notifyLocalOwnerChange();
+  // 암호화 열쇠가 없으면 클라우드와 주고받지 않는다(로컬 저장은 그대로 동작).
+  const key = await loadKey(localStorage, userId);
+  if (!key) return { pulled: [], pushed: [] };
 
   const local = readLocal();
   const marker = readMarker();
@@ -91,12 +111,26 @@ async function performSync(): Promise<SyncOutcome> {
     myClass: cloud.myClassAt ? { value: cloud.myClass, at: cloud.myClassAt } : null,
     memo: cloud.memoAt ? { value: cloud.memo, at: cloud.memoAt } : null,
   };
+  // 클라우드 암호문을 이 기기에서 해독. 풀 수 없는 저장소는 이번 동기화에서 건너뛴다(덮어쓰기 방지).
+  const skip = new Set<StoreName>();
+  for (const s of STORES) {
+    const cm = cloudMap[s];
+    if (!cm) continue;
+    try { cm.value = await decryptStore(cm.value, key); } catch { skip.add(s); }
+  }
 
   const writes: Partial<Record<StoreName, unknown>> = {};
   const pushes: Partial<Record<StoreName, unknown>> = {};
   for (const s of STORES) {
+    if (skip.has(s)) continue;
+    const cm0 = cloudMap[s];
+    // 예전 평문으로 남은 클라우드 데이터는 내용이 같아도 암호문으로 다시 올린다.
+    const plainInCloud = cm0 && s !== "myClass" && !isEncryptedValue(
+      s === "dashboard" ? cloud.dashboard : s === "yearly" ? cloud.yearly : s === "rules" ? cloud.rules : cloud.memo,
+    );
     const d = decideStore(s, local[s], cloudMap[s], marker[s]);
     if (d === "local") pushes[s] = local[s];
+    else if (d !== "cloud" && plainInCloud) pushes[s] = local[s];
     else if (d === "cloud") {
       const cm = cloudMap[s];
       if (cm) writes[s] = cm.value;
@@ -111,7 +145,9 @@ async function performSync(): Promise<SyncOutcome> {
   if (outcome.pushed.length) {
     if (!await currentUser()) return { pulled: [], pushed: [] };
     // The server also compares this expected owner with the verified bearer subject.
-    await pushSyncData({ data: { ...pushes, expectedUserId: userId } });
+    const encrypted: Partial<Record<StoreName, unknown>> = {};
+    for (const s of outcome.pushed) encrypted[s] = await encryptStore(s, pushes[s], key);
+    await pushSyncData({ data: { ...encrypted, expectedUserId: userId } });
   }
   if (!await currentUser()) return { pulled: [], pushed: [] };
 
