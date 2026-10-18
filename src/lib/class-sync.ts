@@ -20,16 +20,7 @@ export function setSubject(cells: YCells, date: string, cls: number, period: num
   return { ...cells, [k]: { ...cells[k], t } };
 }
 
-export function normalizeClass(v: unknown, count = 9): number {
-  const n = Math.floor(Number(v));
-  return n >= 0 && n < count ? n : 0;
+export function normalizeClass(v: unknown): number {
+  const n = Number(v);
+  return n === 1 || n === 2 ? n : 0;
 }
-
-/** 학년 학급 수 (1~9반, 기본 3반) */
-export const CLASS_COUNT_KEY = "teacher-class-count-v1";
-export const MAX_CLASSES = 9;
-export function normalizeClassCount(v: unknown): number {
-  const n = Math.floor(Number(v));
-  return n >= 1 && n <= MAX_CLASSES ? n : 3;
-}
-export const classLabels = (count: number) => Array.from({ length: normalizeClassCount(count) }, (_, i) => `${i + 1}반`);

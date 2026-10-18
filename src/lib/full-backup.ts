@@ -35,7 +35,7 @@ export function parseFullBackup(d: unknown): Partial<Record<keyof typeof BACKUP_
     if (isObj(d.yearly)) out.yearly = JSON.stringify(d.yearly);
     if (Array.isArray(d.rules)) out.rules = JSON.stringify(d.rules);
     if (Array.isArray(d.memo)) out.memo = JSON.stringify(d.memo);
-    if (d.myClass !== undefined) out.myClass = String([0, 1, 2, 3, 4, 5, 6, 7, 8].includes(Number(d.myClass)) ? Number(d.myClass) : 0);
+    if (d.myClass !== undefined) out.myClass = String([0, 1, 2].includes(Number(d.myClass)) ? Number(d.myClass) : 0);
     return out;
   }
   // 예전 학년 시간표 전용 백업 { v, cells, rules }
