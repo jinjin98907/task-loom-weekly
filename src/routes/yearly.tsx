@@ -50,7 +50,20 @@ function weeksOf(start: Date, end: Date) {
   return out;
 }
 
-function Yearly() {
+  // 아래 연간 표의 실제 셀 폭을 재서 위 요약 카드에 그대로 적용
+  const bigTableRef = useRef<HTMLTableElement | null>(null);
+  const [cellW, setCellW] = useState(34);
+  useEffect(() => {
+    const el = bigTableRef.current;
+    if (!el) return;
+    const update = () => setCellW(Math.max(18, (el.clientWidth - 52) / 30));
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  function Yearly() {
   const [cells, setCells] = useState<Cells>({});
   const [loaded, setLoaded] = useState(false);
   const [sem, setSem] = useState<number | null>(null);
