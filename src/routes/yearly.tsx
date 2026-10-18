@@ -194,7 +194,7 @@ function weeksOf(start: Date, end: Date) {
         </div>
       </header>
 
-      <WeekCards today={today} cells={cells} rules={rules} setCell={setCell}
+      <WeekCards today={today} cells={cells} rules={rules} setCell={setCell} cellW={cellW}
         onMenu={(x, y, k) => setMenu({ x, y, k })} />
 
       <div className="mb-3 flex items-center gap-2">
@@ -222,7 +222,7 @@ function weeksOf(start: Date, end: Date) {
             <p className="pt-1 text-xs font-semibold text-muted-foreground">지난주</p>
           )}
           <div className={`overflow-x-auto rounded-lg border bg-card ${past ? "opacity-90" : ""}`}>
-            <table className="w-full table-fixed border-collapse text-[11px]">
+            <table ref={wi === 0 ? bigTableRef : undefined} className="w-full table-fixed border-collapse text-[11px]">
               <colgroup><col style={{ width: 52 }} />{Array.from({ length: COLS }, (_, i) => <col key={i} />)}</colgroup>
               <thead>
                 <tr className="bg-sky-soft">
@@ -368,9 +368,11 @@ function weeksOf(start: Date, end: Date) {
 
 function mondayOf(d: Date) { const m = new Date(d.getFullYear(), d.getMonth(), d.getDate()); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return m; }
 
-function WeekCards({ today, cells, rules, setCell, onMenu }: {
+function WeekCards({ today, cells, rules, setCell, onMenu, cellW }: {
   today: Date; cells: Cells; rules: ColorRule[];
   setCell: (k: string, p: Partial<Cell>) => void; onMenu: (x: number, y: number, k: string) => void;
+  /** 아래 연간 표의 실제 셀 폭(px) — 요약 카드 셀을 같은 크기로 맞춤 */
+  cellW: number;
 }) {
   const [mon, setMon] = useState(() => mondayOf(today));
   const days = Array.from({ length: 5 }, (_, i) => { const d = new Date(mon); d.setDate(d.getDate() + i); return d; });
@@ -391,8 +393,8 @@ function WeekCards({ today, cells, rules, setCell, onMenu }: {
       </div>
       <div className="grid grid-cols-3 gap-0.5">
         {CLASSES.map((cls, ci) => (
-          <table key={cls} className="w-full table-fixed border-collapse text-[10px]">
-            <colgroup><col style={{ width: 14 }} />{days.map((d) => <col key={keyOf(d)} />)}</colgroup>
+          <table key={cls} className="w-auto table-fixed border-collapse text-[11px]">
+            <colgroup><col style={{ width: 22 }} />{days.map((d) => <col key={keyOf(d)} style={{ width: Math.round(cellW) }} />)}</colgroup>
             <thead>
               <tr className="bg-sky-soft">
                 <th className="border px-0 py-0.5 font-semibold text-primary">{cls}</th>
@@ -415,7 +417,7 @@ function WeekCards({ today, cells, rules, setCell, onMenu }: {
                         <input value={c?.t ?? ""} onChange={(e) => setCell(k, { t: e.target.value })}
                           onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onMenu(e.clientX, e.clientY, k); }}
                           style={{ color: st.color }}
-                          className="w-full bg-transparent px-0 py-0.5 text-center text-[9px] font-medium outline-none focus:bg-sky-soft/60 sm:text-[10px]" />
+                          className="w-full bg-transparent px-0.5 py-1 text-center text-[11px] font-medium outline-none focus:bg-sky-soft/60" />
                       </td>
                     );
                   })}
