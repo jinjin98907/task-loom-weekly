@@ -56,5 +56,5 @@ export function changedAreas(a: DataState | undefined, b: DataState): string[] {
     [BACKUP_KEYS.memo]: "메모장",
   };
   if (!a) return ["처음 기록"];
-  return HISTORY_KEYS.filter((k) => (a[k] ?? null) !== (b[k] ?? null)).map((k) => names[k]);
+  return HISTORY_KEYS.filter((k) => (a[k] ?? null) !== (b[k] ?? null)).map((k) => names[k] ?? k);
 }

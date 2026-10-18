@@ -27,12 +27,12 @@ describe("snapshots", () => {
     let l: ReturnType<typeof addSnapshot> = [];
     for (let i = 0; i < 25; i++) l = addSnapshot(l, st(String(i)), i * 120_000);
     expect(l.length).toBe(MAX_SNAPSHOTS);
-    expect(l[0].state).toEqual(st("24"));
+    expect(l[0]?.state).toEqual(st("24"));
   });
   it("changes within a minute update the latest version instead of adding", () => {
     let l = addSnapshot([], st("a"), 0);
     l = addSnapshot(l, st("b"), 30_000);
     expect(l.length).toBe(1);
-    expect(l[0].state).toEqual(st("b"));
+    expect(l[0]?.state).toEqual(st("b"));
   });
 });
