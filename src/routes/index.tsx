@@ -26,7 +26,7 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-type DayData = { todos: Todo[]; notices: Todo[]; notice?: string; attendance: Attendance; periods: string[]; details?: string[] };
+type DayData = { todos: Todo[]; times?: Todo[]; notices: Todo[]; notice?: string; attendance: Attendance; periods: string[]; details?: string[] };
 type Store = Record<string, DayData>;
 
 const KEY = "teacher-dashboard-v1";
@@ -179,6 +179,12 @@ function Dashboard() {
         <Row label="✅ 체크사항" cols={cols}>
           {days.map((d) => { const k = keyOf(d); return (
             <Cell key={k} today={k === todayKey}><TodoList items={get(k).todos} onChange={(fn) => update(k, (x) => ({ ...x, todos: fn(x.todos) }))} placeholder="+ 업무 추가 (Shift+Enter 줄바꿈)" /></Cell>
+          ); })}
+        </Row>
+
+        <Row label="⏰ 기억해야 하는 시간" cols={cols}>
+          {days.map((d) => { const k = keyOf(d); return (
+            <Cell key={k} today={k === todayKey}><TodoList items={get(k).times ?? []} onChange={(fn) => update(k, (x) => ({ ...x, times: fn(x.times ?? []) }))} placeholder="+ 시간 추가 (Shift+Enter 줄바꿈)" /></Cell>
           ); })}
         </Row>
 
