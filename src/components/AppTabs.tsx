@@ -24,6 +24,13 @@ export function AppTabs() {
         ))}
       </div>
       <Link
+        to="/memo"
+        className="ml-auto -mb-px rounded-t-lg border border-transparent px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-sky-soft"
+        activeProps={{ className: "border-sky-mid border-b-background bg-background text-primary" }}
+      >
+        📝 메모장
+      </Link>
+      <Link
         to="/auth"
         className={`ml-auto -mb-px rounded-t-lg border border-transparent px-4 py-2 text-sm font-semibold hover:bg-sky-soft ${signedIn ? "text-primary" : "text-muted-foreground"}`}
       >
