@@ -48,6 +48,7 @@ function Dashboard() {
   const [rules, setRules] = useState<ColorRule[]>([]);
   const [yCells, setYCells] = useState<YCells>({});
   const [myClass, setMyClass] = useState(0);
+  const [classCount, setClassCount] = useState(3);
 
   useEffect(() => {
     try { setStore(JSON.parse(localStorage.getItem(KEY) || "{}")); } catch {}
