@@ -42,7 +42,7 @@ export function redoStep(st: UndoStacks, current: DataState): { stacks: UndoStac
 export function addSnapshot(list: Snapshot[], state: DataState, now: number, force = false): Snapshot[] {
   const last = list[0];
   if (last && sameState(last.state, state)) return list;
-  if (!force && last && now - last.at < SNAPSHOT_GAP_MS) return [{ at: last.at, state }, ...list.slice(1)].length ? [{ at: now, state }, ...list.slice(1)] : list;
+  if (!force && last && now - last.at < SNAPSHOT_GAP_MS) return [{ at: last.at, state }, ...list.slice(1)];
   return [{ at: now, state }, ...list].slice(0, MAX_SNAPSHOTS);
 }
 
