@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CloudSync } from "@/components/CloudSync";
+import { HistoryControls } from "@/components/HistoryControls";
 import { MemoSplit } from "@/components/MemoSplit";
 
 function NotFoundComponent() {
@@ -130,6 +131,7 @@ function RootComponent() {
         <MemoSplit>
           <Outlet />
         </MemoSplit>
+        <HistoryControls />
       </CloudSync>
     </QueryClientProvider>
   );
