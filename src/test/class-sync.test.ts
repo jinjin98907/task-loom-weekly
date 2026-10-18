@@ -21,3 +21,13 @@ describe("class sync", () => {
     expect(normalizeClass(null)).toBe(0);
   });
 });
+
+import { classLabels, normalizeClassCount } from "@/lib/class-sync";
+describe("class count", () => {
+  it("allows 1~9 classes, defaults to 3", () => {
+    expect(normalizeClassCount("9")).toBe(9);
+    expect(normalizeClassCount("10")).toBe(3);
+    expect(normalizeClassCount(null)).toBe(3);
+    expect(classLabels(9)[8]).toBe("9반");
+  });
+});

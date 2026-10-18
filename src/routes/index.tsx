@@ -10,7 +10,7 @@ import { type Attendance, emptyAttendance, normalizeAttendance } from "@/lib/att
 import { AttendanceCompact } from "@/components/AttendanceCompact";
 import { normalizeNotices, type Todo } from "@/lib/day-data";
 import { normalizeRules, styleFor, type ColorRule } from "@/lib/keyword-colors";
-import { cellKey, MY_CLASS_KEY, normalizeClass, setSubject, subjectFor, YEARLY_KEY, type YCells } from "@/lib/class-sync";
+import { CLASS_COUNT_KEY, classLabels, normalizeClassCount, cellKey, MY_CLASS_KEY, normalizeClass, setSubject, subjectFor, YEARLY_KEY, type YCells } from "@/lib/class-sync";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -48,6 +48,7 @@ function Dashboard() {
   const [rules, setRules] = useState<ColorRule[]>([]);
   const [yCells, setYCells] = useState<YCells>({});
   const [myClass, setMyClass] = useState(0);
+  const [classCount, setClassCount] = useState(3);
 
   useEffect(() => {
     try { setStore(JSON.parse(localStorage.getItem(KEY) || "{}")); } catch {}
@@ -55,6 +56,7 @@ function Dashboard() {
       try { setRules(normalizeRules(JSON.parse(localStorage.getItem("teacher-yearly-color-rules-v1") || "[]"))); } catch {}
       try { setYCells(JSON.parse(localStorage.getItem(YEARLY_KEY) || "{}")); } catch {}
       setMyClass(normalizeClass(localStorage.getItem(MY_CLASS_KEY)));
+      setClassCount(normalizeClassCount(localStorage.getItem(CLASS_COUNT_KEY)));
     };
     readShared();
     setLoaded(true);
@@ -143,7 +145,7 @@ function Dashboard() {
           <label className="flex items-center gap-1 text-sm text-muted-foreground">
             내 학급
             <select aria-label="내 학급" value={myClass} onChange={(e) => { const n = normalizeClass(e.target.value); setMyClass(n); localStorage.setItem(MY_CLASS_KEY, String(n)); }} className="rounded-lg border border-sky-mid bg-card px-2 py-1.5 text-sm font-semibold text-secondary-foreground">
-              <option value={0}>1반</option><option value={1}>2반</option><option value={2}>3반</option>
+              {classLabels(classCount).map((l, i) => <option key={i} value={i}>{l}</option>)}
             </select>
           </label>
           <label className="mr-2 flex items-center gap-1 text-sm text-muted-foreground">

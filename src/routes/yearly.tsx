@@ -5,6 +5,7 @@ import { inSel, isMulti, selToTSV, type GridSel } from "@/lib/grid-select";
 
 import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
 import { hasPeriod, isLongDay } from "@/lib/timetable-periods";
+import { CLASS_COUNT_KEY, MAX_CLASSES, classLabels, normalizeClassCount } from "@/lib/class-sync";
 import { normalizeRules, parseBackup, styleFor, type ColorRule } from "@/lib/keyword-colors";
 
 export const Route = createFileRoute("/yearly")({
@@ -25,7 +26,6 @@ type Cell = { t: string; c?: string | undefined; b?: string | undefined };
 type Cells = Record<string, Cell>;
 const KEY = "teacher-yearly-timetable-v1";
 const RULES_KEY = "teacher-yearly-color-rules-v1";
-const CLASSES = ["1반", "2반", "3반"];
 const PERIODS = 6;
 const COLS = 5 * PERIODS;
 const SEMS = [
@@ -59,6 +59,9 @@ function weeksOf(start: Date, end: Date) {
   const [bulk, setBulk] = useState(false);
   const [bulkText, setBulkText] = useState("");
   const [rules, setRules] = useState<ColorRule[]>([]);
+  const [classCount, setClassCount] = useState(3);
+  const CLASSES = useMemo(() => classLabels(classCount), [classCount]);
+  const NC = CLASSES.length;
   const [rulesOpen, setRulesOpen] = useState(false);
   const [nw, setNw] = useState("");
   const [nc, setNc] = useState<string | undefined>(undefined);
@@ -79,10 +82,12 @@ function weeksOf(start: Date, end: Date) {
   useEffect(() => {
     try { setCells(JSON.parse(localStorage.getItem(KEY) || "{}")); } catch {}
     try { setRules(normalizeRules(JSON.parse(localStorage.getItem(RULES_KEY) || "[]"))); } catch {}
+    setClassCount(normalizeClassCount(localStorage.getItem(CLASS_COUNT_KEY)));
     setLoaded(true);
     // 다른 창/탭(주간 대시보드)에서 과목을 고치면 즉시 반영
     const onStorage = (e: StorageEvent) => {
       if (e.key === KEY) { try { setCells(JSON.parse(e.newValue || "{}")); } catch {} }
+      if (e.key === CLASS_COUNT_KEY) setClassCount(normalizeClassCount(e.newValue));
       if (e.key === RULES_KEY) { try { setRules(normalizeRules(JSON.parse(e.newValue || "[]"))); } catch {} }
     };
     window.addEventListener("storage", onStorage);
@@ -111,10 +116,10 @@ function weeksOf(start: Date, end: Date) {
   const ck = (d: Date, cls: number, p: number) => `${keyOf(d)}|${cls}|${p}`;
   // global grid coordinate -> cell key (list: 화면 순서 또는 학기 chronological 순서)
   const keyAtIn = (list: Date[][], row: number, col: number) => {
-    const w = list[Math.floor(row / 3)]; if (!w || col < 0 || col >= COLS) return null;
+    const w = list[Math.floor(row / NC)]; if (!w || col < 0 || col >= COLS) return null;
     const d = w[Math.floor(col / PERIODS)]!;
     if (!inRange(d) || !hasPeriod(d, col % PERIODS)) return null;
-    return ck(d, row % 3, col % PERIODS);
+    return ck(d, row % NC, col % PERIODS);
   };
   const keyAt = (row: number, col: number) => keyAtIn(ordered, row, col);
 
@@ -188,13 +193,19 @@ function weeksOf(start: Date, end: Date) {
           <h1 className="font-display text-2xl text-foreground">📅 학년 전체 시간표 (2026학년도)</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
+          <label className="flex items-center gap-1 rounded-lg border border-sky-mid bg-card px-2 py-1 font-semibold text-secondary-foreground">
+            학급 수
+            <select aria-label="학급 수" value={classCount} onChange={(e) => { const n = normalizeClassCount(e.target.value); setClassCount(n); localStorage.setItem(CLASS_COUNT_KEY, String(n)); }} className="bg-transparent outline-none">
+              {Array.from({ length: MAX_CLASSES }, (_, i) => <option key={i} value={i + 1}>{i + 1}개 반</option>)}
+            </select>
+          </label>
           <Btn onClick={downloadTemplate}>📄 엑셀 양식 다운로드</Btn>
           <Btn onClick={() => setBulk(true)}>📋 일괄 붙여넣기</Btn>
           <Btn onClick={() => setRulesOpen(true)}>🎨 단어 색상 규칙</Btn>
         </div>
       </header>
 
-      <WeekCards today={today} cells={cells} rules={rules} setCell={setCell} cellW={cellW}
+      <WeekCards classes={CLASSES} today={today} cells={cells} rules={rules} setCell={setCell} cellW={cellW}
         onMenu={(x, y, k) => setMenu({ x, y, k })} />
 
       <div className="mb-3 flex items-center gap-2">
@@ -252,7 +263,7 @@ function weeksOf(start: Date, end: Date) {
                     <th className="border bg-sky-soft/40 px-1 font-semibold text-secondary-foreground">{cls}</th>
                     {Array.from({ length: COLS }, (_, col) => {
                       const d = w[Math.floor(col / PERIODS)]!;
-                      const R = wi * 3 + ci;
+                      const R = wi * NC + ci;
                       const selOn = isMulti(sel) && inSel(sel, R, col);
                       const dragProps = {
                         onMouseDown: (e: React.MouseEvent) => { if (e.button !== 0) return; dragging.current = true; setSel({ r0: R, c0: col, r1: R, c1: col }); },
@@ -274,7 +285,7 @@ function weeksOf(start: Date, end: Date) {
                             onChange={(e) => setCell(k, { t: e.target.value })}
                             onPaste={(e) => {
                               const t = e.clipboardData.getData("text/plain");
-                              if (t.includes("\t") || t.replace(/\r?\n$/, "").includes("\n")) { e.preventDefault(); pasteGrid(t, wi * 3 + ci, col); }
+                              if (t.includes("\t") || t.replace(/\r?\n$/, "").includes("\n")) { e.preventDefault(); pasteGrid(t, wi * NC + ci, col); }
                             }}
                             onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setMenu({ x: e.clientX, y: e.clientY, k }); }}
                             style={{ color: st.color }}
@@ -351,7 +362,7 @@ function weeksOf(start: Date, end: Date) {
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-3xl rounded-2xl bg-card p-5 shadow-xl">
             <h2 className="mb-1 font-display text-lg text-foreground">📋 {S.label} 일괄 붙여넣기</h2>
             <p className="mb-3 text-xs text-muted-foreground">
-              엑셀 양식(또는 같은 모양의 표)을 통째로 복사해 붙여넣으세요. 한 주는 1반·2반·3반 세 줄, 각 줄은 월1~금6 (30칸)입니다. {S.label} 첫 주부터 차례로 채워져요.
+              엑셀 양식(또는 같은 모양의 표)을 통째로 복사해 붙여넣으세요. 한 주는 1반~{NC}반 {NC}줄, 각 줄은 월1~금6 (30칸)입니다. {S.label} 첫 주부터 차례로 채워져요.
             </p>
             <textarea value={bulkText} onChange={(e) => setBulkText(e.target.value)} rows={12}
               className="w-full rounded-lg border bg-background p-2 font-mono text-xs" placeholder="여기에 Ctrl+V" />
@@ -368,8 +379,8 @@ function weeksOf(start: Date, end: Date) {
 
 function mondayOf(d: Date) { const m = new Date(d.getFullYear(), d.getMonth(), d.getDate()); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return m; }
 
-function WeekCards({ today, cells, rules, setCell, onMenu, cellW }: {
-  today: Date; cells: Cells; rules: ColorRule[];
+function WeekCards({ classes: CLASSES, today, cells, rules, setCell, onMenu, cellW }: {
+  classes: string[]; today: Date; cells: Cells; rules: ColorRule[];
   setCell: (k: string, p: Partial<Cell>) => void; onMenu: (x: number, y: number, k: string) => void;
   /** 아래 연간 표의 실제 셀 폭(px) — 요약 카드 셀을 같은 크기로 맞춤 */
   cellW: number;
@@ -391,7 +402,7 @@ function WeekCards({ today, cells, rules, setCell, onMenu, cellW }: {
         <Btn sm onClick={() => shift(1)}>다음 주 ▶</Btn>
         {!isCur && <span className="text-[10px] text-muted-foreground">보는 주: {f(days[0]!)} ~ {f(days[4]!)}</span>}
       </div>
-      <div className="grid grid-cols-3 gap-0.5">
+      <div className="grid grid-cols-3 gap-x-0.5 gap-y-1.5">
         {CLASSES.map((cls, ci) => (
           <table key={cls} className="w-auto table-fixed border-collapse text-[11px]">
             <colgroup><col style={{ width: 22 }} />{days.map((d) => <col key={keyOf(d)} style={{ width: Math.round(cellW) }} />)}</colgroup>
