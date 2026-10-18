@@ -133,29 +133,37 @@ export function MemoEditor() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-1 border-b border-sky-mid px-2 py-1.5">
-        <button onClick={() => setShowTree((v) => !v)} title="페이지 목록" className="rounded border border-sky-mid px-1.5 py-1 text-xs text-primary hover:bg-sky-soft">☰</button>
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="🔍 메모 검색 (제목·내용)"
           className="min-w-0 flex-1 rounded-md border border-sky-mid bg-background px-2 py-1 text-xs outline-none focus:border-primary" />
         {query && <button onClick={() => setQuery("")} className="px-1 text-xs text-muted-foreground">✕</button>}
       </div>
 
-      <div className="flex min-h-0 flex-1">
-        {showTree && (
-          <aside className="flex w-44 shrink-0 flex-col border-r border-sky-mid">
-            <div className="min-h-0 flex-1 overflow-auto p-1">
-              {query.trim() ? (
-                results.length ? results.map((m) => (
-                  <button key={m.id} onClick={() => setActiveId(m.id)}
-                    className={`block w-full rounded px-2 py-1 text-left text-xs hover:bg-sky-soft ${m.id === active?.id ? "bg-sky-soft text-primary" : ""}`}>
-                    <div className="truncate font-medium">📄 {m.title || "제목 없음"}</div>
-                    {snippet(m) && <div className="truncate text-[10px] text-muted-foreground">{snippet(m)}</div>}
-                  </button>
-                )) : <p className="p-2 text-xs text-muted-foreground">검색 결과가 없어요.</p>
-              ) : renderTree(undefined, 0)}
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-sky-mid px-2 py-1">
+        {memos.filter((m) => !m.parentId).map((m) => {
+          const on = m.id === active?.id || crumbs[0]?.id === m.id;
+          return (
+            <div key={m.id} className={`group flex shrink-0 items-center rounded-md border text-xs ${on ? "border-primary bg-sky-soft text-primary" : "border-sky-mid text-foreground hover:bg-sky-soft/60"}`}>
+              <button onClick={() => { setActiveId(m.id); setQuery(""); }} className="max-w-[9rem] truncate py-0.5 pl-2 pr-1">📄 {m.title || "제목 없음"}</button>
+              <button onClick={() => remove(m.id)} title="지우기" className="pr-1.5 opacity-50 hover:opacity-100">✕</button>
             </div>
-            <button onClick={() => add()} className="m-1 rounded-md border border-dashed border-sky-mid px-2 py-1 text-xs text-primary hover:bg-sky-soft">＋ 새 페이지</button>
-          </aside>
-        )}
+          );
+        })}
+        <button onClick={() => add()} title="새 페이지" className="shrink-0 rounded-md border border-dashed border-sky-mid px-2 py-0.5 text-xs text-primary hover:bg-sky-soft">＋</button>
+      </div>
+
+      {query.trim() && (
+        <div className="max-h-48 overflow-auto border-b border-sky-mid p-1">
+          {results.length ? results.map((m) => (
+            <button key={m.id} onClick={() => { setActiveId(m.id); setQuery(""); }}
+              className="block w-full rounded px-2 py-1 text-left text-xs hover:bg-sky-soft">
+              <div className="truncate font-medium">📄 {m.title || "제목 없음"}</div>
+              {snippet(m) && <div className="truncate text-[10px] text-muted-foreground">{snippet(m)}</div>}
+            </button>
+          )) : <p className="p-2 text-xs text-muted-foreground">검색 결과가 없어요.</p>}
+        </div>
+      )}
+
+      <div className="flex min-h-0 flex-1">
 
         {active && (
           <div className="min-h-0 flex-1 overflow-auto p-3">
