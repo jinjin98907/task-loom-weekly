@@ -10,7 +10,7 @@ export const newMemoId = () => Math.random().toString(36).slice(2, 10);
 export function normalizeMemos(raw: unknown): Memo[] {
   if (!Array.isArray(raw)) return [];
   const list = raw
-    .filter((m): m is Record<string, unknown> => !!m && typeof m === "object")
+    .filter((m): m is { id?: unknown; title?: unknown; text?: unknown; parentId?: unknown; closed?: unknown } => !!m && typeof m === "object")
     .map((m) => {
       const memo: Memo = {
         id: typeof m.id === "string" && m.id ? m.id : newMemoId(),
