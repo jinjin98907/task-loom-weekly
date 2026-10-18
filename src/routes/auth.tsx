@@ -103,6 +103,29 @@ function AuthPage() {
     }
   };
 
+  const sendReset = async () => {
+    if (busy) return;
+    const target = email.trim();
+    if (!target) {
+      setMsg({ kind: "error", text: "위 칸에 가입한 이메일을 먼저 적어 주세요." });
+      return;
+    }
+    setBusy(true);
+    setMsg(null);
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { error } = await supabase.auth.resetPasswordForEmail(target, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setMsg({ kind: "info", text: "가입된 이메일이면 비밀번호 재설정 링크를 보냈어요. 메일함(스팸함 포함)을 확인해 주세요." });
+    } catch {
+      setMsg({ kind: "error", text: "메일을 보내지 못했어요. 잠시 후 다시 시도해 주세요." });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const oauth = async (provider: "google" | "lovable") => {
     if (busy) return;
     setBusy(true);
@@ -275,6 +298,14 @@ function AuthPage() {
                 {busy ? "잠시만요…" : mode === "signin" ? "로그인" : "회원가입"}
               </Button>
             </form>
+
+            {mode === "signin" && (
+              <p className="text-center text-xs">
+                <Button variant="link" type="button" className="h-auto p-0 text-xs" disabled={busy} onClick={sendReset}>
+                  비밀번호를 잊으셨나요?
+                </Button>
+              </p>
+            )}
 
             <p className="text-center text-xs text-muted-foreground">
               {mode === "signin" ? "계정이 없나요? " : "이미 계정이 있나요? "}
