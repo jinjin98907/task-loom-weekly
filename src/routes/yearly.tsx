@@ -4,6 +4,8 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { inSel, isMulti, selToTSV, type GridSel } from "@/lib/grid-select";
 
 import { isCurrentRange, isCurrentWeek, isPastWeek, orderSemesters, orderWeeks } from "@/lib/timetable-order";
+import { tinyCellFontPx } from "@/lib/subject-fit";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { hasPeriod, isLongDay } from "@/lib/timetable-periods";
 import { normalizeRules, parseBackup, styleFor, type ColorRule } from "@/lib/keyword-colors";
 
@@ -59,6 +61,7 @@ function Yearly() {
   const [bulk, setBulk] = useState(false);
   const [bulkText, setBulkText] = useState("");
   const [rules, setRules] = useState<ColorRule[]>([]);
+  const isMobile = useIsMobile();
   const [rulesOpen, setRulesOpen] = useState(false);
   const [nw, setNw] = useState("");
   const [nc, setNc] = useState<string | undefined>(undefined);
@@ -182,7 +185,7 @@ function Yearly() {
         </div>
       </header>
 
-      <WeekCards today={today} cells={cells} rules={rules} setCell={setCell}
+      <WeekCards mobile={isMobile} today={today} cells={cells} rules={rules} setCell={setCell}
         onMenu={(x, y, k) => setMenu({ x, y, k })} />
 
       <div className="mb-3 flex items-center gap-2">
@@ -265,8 +268,8 @@ function Yearly() {
                               if (t.includes("\t") || t.replace(/\r?\n$/, "").includes("\n")) { e.preventDefault(); pasteGrid(t, wi * 3 + ci, col); }
                             }}
                             onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setMenu({ x: e.clientX, y: e.clientY, k }); }}
-                            style={{ color: st.color }}
-                            className="w-full bg-transparent px-0.5 py-1 text-center font-medium outline-none focus:bg-sky-soft/60"
+                            style={{ color: st.color, ...(isMobile ? { fontSize: tinyCellFontPx(c?.t ?? "", 26), letterSpacing: "-0.04em" } : {}) }}
+                            className="w-full bg-transparent px-0 sm:px-0.5 py-1 text-center font-medium outline-none focus:bg-sky-soft/60"
                           />
                         </td>
                       );
@@ -356,8 +359,8 @@ function Yearly() {
 
 function mondayOf(d: Date) { const m = new Date(d.getFullYear(), d.getMonth(), d.getDate()); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return m; }
 
-function WeekCards({ today, cells, rules, setCell, onMenu }: {
-  today: Date; cells: Cells; rules: ColorRule[];
+function WeekCards({ mobile, today, cells, rules, setCell, onMenu }: {
+  mobile: boolean; today: Date; cells: Cells; rules: ColorRule[];
   setCell: (k: string, p: Partial<Cell>) => void; onMenu: (x: number, y: number, k: string) => void;
 }) {
   const [mon, setMon] = useState(() => mondayOf(today));
@@ -402,7 +405,7 @@ function WeekCards({ today, cells, rules, setCell, onMenu }: {
                       <td key={keyOf(d)} className="border p-0" style={{ background: st.background }}>
                         <input value={c?.t ?? ""} onChange={(e) => setCell(k, { t: e.target.value })}
                           onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onMenu(e.clientX, e.clientY, k); }}
-                          style={{ color: st.color }}
+                          style={{ color: st.color, ...(mobile ? { fontSize: tinyCellFontPx(c?.t ?? "", 18), letterSpacing: "-0.05em" } : {}) }}
                           className="w-full bg-transparent px-0 py-0.5 text-center text-[9px] font-medium outline-none focus:bg-sky-soft/60 sm:text-[10px]" />
                       </td>
                     );

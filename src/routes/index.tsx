@@ -4,6 +4,7 @@ import { AppTabs } from "@/components/AppTabs";
 import { AutoTextarea } from "@/components/AutoTextarea";
 import { TodoList } from "@/components/TodoList";
 import { subjectFit } from "@/lib/subject-fit";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useEffect, useMemo, useState } from "react";
 import { type Attendance, emptyAttendance, normalizeAttendance } from "@/lib/attendance";
@@ -48,6 +49,8 @@ function Dashboard() {
   const [rules, setRules] = useState<ColorRule[]>([]);
   const [yCells, setYCells] = useState<YCells>({});
   const [myClass, setMyClass] = useState(0);
+  const isMobile = useIsMobile();
+  const [day, setDay] = useState(() => { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); });
 
   useEffect(() => {
     try { setStore(JSON.parse(localStorage.getItem(KEY) || "{}")); } catch {}
@@ -79,11 +82,12 @@ function Dashboard() {
     setYCells(next);
   };
 
-  const weeks = useMemo(() => Array.from({ length: 4 }, (_, w) => Array.from({ length: showWeekend ? 7 : 5 }, (_, i) => {
+  const weeks = useMemo(() => isMobile ? [[day]] : Array.from({ length: 4 }, (_, w) => Array.from({ length: showWeekend ? 7 : 5 }, (_, i) => {
     const d = new Date(monday); d.setDate(d.getDate() + w * 7 + i); return d;
-  })), [monday, showWeekend]);
+  })), [monday, showWeekend, isMobile, day]);
   const days = weeks[0]!;
-  const lastWeek = weeks[3]!;
+  const lastWeek = weeks[weeks.length - 1]!;
+  const shiftDay = (n: number) => setDay((d) => { const x = new Date(d); x.setDate(x.getDate() + n); if (!showWeekend) while (x.getDay() === 0 || x.getDay() === 6) x.setDate(x.getDate() + (n < 0 ? -1 : 1)); return x; });
   const todayKey = keyOf(new Date());
 
   const get = (k: string): DayData => {
@@ -100,16 +104,16 @@ function Dashboard() {
   const shift = (w: number) => { const d = new Date(monday); d.setDate(d.getDate() + w * 7); setMonday(d); };
 
   const end = lastWeek[lastWeek.length - 1] ?? monday;
-  const cols = `120px repeat(${days.length}, minmax(0, 1fr))`;
+  const cols = isMobile ? `76px minmax(0, 1fr)` : `120px repeat(${days.length}, minmax(0, 1fr))`;
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background p-2 sm:p-6">
       <AppTabs />
       <header className="mb-5 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl text-foreground">🏫 우리반 주간 대시보드</h1>
+          <h1 className="font-display text-2xl sm:text-3xl text-foreground">🏫 우리반 주간 대시보드</h1>
           <p className="text-sm text-muted-foreground">
-            {monday.getFullYear()}년 {monday.getMonth() + 1}월 {monday.getDate()}일 – {end.getMonth() + 1}월 {end.getDate()}일
+            {isMobile ? `${day.getFullYear()}년 ${day.getMonth() + 1}월 ${day.getDate()}일 (${DAYS[day.getDay()]})` : <>{monday.getFullYear()}년 {monday.getMonth() + 1}월 {monday.getDate()}일 – {end.getMonth() + 1}월 {end.getDate()}일</>}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -150,9 +154,15 @@ function Dashboard() {
             <input type="checkbox" className="accent-sky-strong" checked={showWeekend} onChange={(e) => setShowWeekend(e.target.checked)} />
             주말 보기
           </label>
+          {isMobile ? (<>
+            <NavBtn onClick={() => shiftDay(-1)}>◀ 이전 날</NavBtn>
+            <button onClick={() => { const t = new Date(); setDay(new Date(t.getFullYear(), t.getMonth(), t.getDate())); }} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90">오늘</button>
+            <NavBtn onClick={() => shiftDay(1)}>다음 날 ▶</NavBtn>
+          </>) : (<>
           <NavBtn onClick={() => shift(-1)}>◀ 이전 주</NavBtn>
           <button onClick={() => setMonday(mondayOf(new Date()))} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90">오늘</button>
           <NavBtn onClick={() => shift(1)}>다음 주 ▶</NavBtn>
+          </>)}
         </div>
       </header>
 
@@ -161,7 +171,7 @@ function Dashboard() {
       {weeks.map((days, wi) => (
       <section key={wi}>
         <h2 className="mb-2 font-display text-lg text-secondary-foreground">
-          {wi === 0 ? "📌 " : ""}{days[0]!.getMonth() + 1}월 {days[0]!.getDate()}일 주간
+          {wi === 0 ? "📌 " : ""}{days[0]!.getMonth() + 1}월 {days[0]!.getDate()}일 {isMobile ? `(${DAYS[days[0]!.getDay()]})` : "주간"}
         </h2>
       <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="grid border-b bg-sky-soft" style={{ gridTemplateColumns: cols }}>
@@ -247,7 +257,7 @@ function NavBtn({ children, onClick }: { children: React.ReactNode; onClick: () 
 function Row({ label, cols, children }: { label: string; cols: string; children: React.ReactNode }) {
   return (
     <div className="grid border-b last:border-b-0" style={{ gridTemplateColumns: cols }}>
-      <div className="flex items-center justify-center bg-sky-soft p-3 font-display text-base text-secondary-foreground">{label}</div>
+      <div className="flex items-center justify-center bg-sky-soft p-1 sm:p-3 text-center font-display text-sm sm:text-base text-secondary-foreground">{label}</div>
       {children}
     </div>
   );
