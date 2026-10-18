@@ -4,7 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppTabs } from "@/components/AppTabs";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/components/CloudSync";
-import { syncNow } from "@/lib/cloud-sync-client";
+import { syncNow, unlockEncryption } from "@/lib/cloud-sync-client";
+import { clearKeys, notifyE2eeChange } from "@/lib/e2ee";
+import { useE2eeUnlocked } from "@/hooks/use-e2ee";
 import { releaseLocalOwner, notifyLocalOwnerChange } from "@/lib/cloud-local-owner";
 
 export const Route = createFileRoute("/auth")({
@@ -27,13 +29,22 @@ function AuthPage() {
   const queryClient = useQueryClient();
   const { user } = useAccount();
   const signedInEmail = user?.email ?? null;
+  const unlocked = useE2eeUnlocked(user?.id);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "error" | "info"; text: string } | null>(null);
 
-  const afterAuth = async () => {
+  const afterAuth = async (pw?: string) => {
+    if (pw) {
+      try {
+        if (!(await unlockEncryption(pw))) {
+          setMsg({ kind: "error", text: "클라우드 데이터가 다른 비밀번호로 잠겨 있어 열 수 없어요. 예전 비밀번호로 잠금 해제해 주세요." });
+          return;
+        }
+      } catch {}
+    }
     try {
       await syncNow(); // 로그인 즉시 로컬 ↔ 클라우드 한 번 맞추고 이동
     } catch {}
@@ -52,7 +63,7 @@ function AuthPage() {
         setMsg({ kind: "error", text: "이메일이나 비밀번호를 확인해 주세요." });
         return;
       }
-      if (data.session) await afterAuth();
+      if (data.session) await afterAuth(password);
     } catch {
       setMsg({ kind: "error", text: "로그인에 실패했어요. 잠시 후 다시 시도해 주세요." });
     } finally {
@@ -81,7 +92,7 @@ function AuthPage() {
         return;
       }
       if (data.session) {
-        await afterAuth();
+        await afterAuth(password);
         return;
       }
       setMsg({ kind: "info", text: "확인 링크를 이메일로 보냈어요. 메일에서 확인한 뒤 로그인해 주세요." });
@@ -121,6 +132,8 @@ function AuthPage() {
       queryClient.clear();
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      clearKeys(localStorage);
+      notifyE2eeChange();
       if (releaseLocalOwner(localStorage)) notifyLocalOwnerChange();
       setPassword("");
       setEmail("");
@@ -136,6 +149,26 @@ function AuthPage() {
     }
   };
 
+  const unlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      if (await unlockEncryption(password)) {
+        setPassword("");
+        await syncNow().catch(() => {});
+        setMsg({ kind: "info", text: "잠금을 풀었어요. 이제 암호화된 상태로 동기화돼요." });
+      } else {
+        setMsg({ kind: "error", text: "비밀번호가 맞지 않아요." });
+      }
+    } catch {
+      setMsg({ kind: "error", text: "잠금 해제에 실패했어요. 잠시 후 다시 시도해 주세요." });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const inputCls =
     "w-full rounded-lg border border-sky-mid bg-card px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring";
 
@@ -145,10 +178,21 @@ function AuthPage() {
       <div className="mx-auto mt-10 w-full max-w-md rounded-2xl border bg-card p-6 shadow-sm">
         {signedInEmail ? (
           <div className="space-y-4 text-center">
-            <h1 className="font-display text-2xl text-foreground">☁️ 동기화 켜짐</h1>
+            <h1 className="font-display text-2xl text-foreground">{unlocked ? "🔐 동기화 켜짐" : "🔒 잠금 해제 필요"}</h1>
+            {!unlocked && (
+              <form onSubmit={unlock} className="space-y-2 rounded-xl border border-sky-mid bg-sky-soft p-3 text-left">
+                <p className="text-xs text-secondary-foreground">
+                  데이터는 관리자도 읽을 수 없도록 비밀번호로 암호화해 저장해요. 이 기기에서 처음 한 번 비밀번호를 입력해 주세요.
+                  (Google·Lovable로 로그인했다면 처음 정한 암호화용 비밀번호를 쓰고, 처음이면 새로 정해 주세요.)
+                </p>
+                <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
+                  placeholder="비밀번호" aria-label="암호화 비밀번호" autoComplete="current-password" className={inputCls} />
+                <Button type="submit" disabled={busy} className="w-full">{busy ? "잠시만요…" : "잠금 해제"}</Button>
+              </form>
+            )}
             <p className="text-sm text-muted-foreground">
               <span className="font-semibold text-secondary-foreground">{signedInEmail}</span> 계정으로 로그인 중이에요.
-              이 기기의 대시보드 데이터가 클라우드에 자동 저장되고, 다른 기기에서도 같은 데이터를 볼 수 있어요.
+              이 기기의 대시보드 데이터가 암호화되어 클라우드에 자동 저장되고(관리자도 내용을 볼 수 없어요), 다른 기기에서도 같은 데이터를 볼 수 있어요.
             </p>
             <div className="flex justify-center gap-2">
               <Button

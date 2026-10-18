@@ -13,7 +13,7 @@ import {
 import { pullSyncData, pushSyncData } from "@/lib/cloud-sync.functions";
 import { LOCAL_KEYS, MARKER_KEY, OWNER_KEY, prepareLocalOwner, notifyLocalOwnerChange } from "./cloud-local-owner";
 export { LOCAL_KEYS, MARKER_KEY } from "./cloud-local-owner";
-import { loadKey, encryptStore, decryptStore, isEncryptedValue, deriveKey, saveKey } from "./e2ee";
+import { loadKey, encryptStore, decryptStore, isEncryptedValue, deriveKey, saveKey, notifyE2eeChange } from "./e2ee";
 
 /** 비밀번호로 이 기기의 암호화 열쇠를 만든다. 클라우드에 다른 열쇠로 잠긴 데이터가 있으면 false. */
 export async function unlockEncryption(password: string): Promise<boolean> {
@@ -27,7 +27,7 @@ export async function unlockEncryption(password: string): Promise<boolean> {
     try { await decryptStore(v, key); } catch { return false; }
   }
   await saveKey(localStorage, data.user.id, key);
-  notifyLocalOwnerChange();
+  notifyE2eeChange();
   return true;
 }
 

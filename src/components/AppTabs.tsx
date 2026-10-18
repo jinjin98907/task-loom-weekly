@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useAccount } from "@/components/CloudSync";
+import { useE2eeUnlocked } from "@/hooks/use-e2ee";
 import { toggleMemo } from "@/components/MemoSplit";
 
 const TABS = [
@@ -11,6 +12,7 @@ const TABS = [
 
 export function AppTabs() {
   const { user } = useAccount();
+  const unlocked = useE2eeUnlocked(user?.id);
   const signedIn = Boolean(user);
 
   return (
@@ -36,7 +38,7 @@ export function AppTabs() {
         to="/auth"
         className={`-mb-px rounded-t-lg border border-transparent px-4 py-2 text-sm font-semibold hover:bg-sky-soft ${signedIn ? "text-primary" : "text-muted-foreground"}`}
       >
-        ☁️ {signedIn ? "동기화 켜짐" : "로그인"}
+        {signedIn ? (unlocked ? "🔐 동기화 켜짐" : "🔒 잠금 해제 필요") : "☁️ 로그인"}
       </Link>
     </nav>
   );

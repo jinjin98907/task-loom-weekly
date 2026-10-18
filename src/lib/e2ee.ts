@@ -90,3 +90,8 @@ export async function decryptStore(value: unknown, key: CryptoKey): Promise<unkn
 export function isEncryptedValue(v: unknown) {
   return unwrap(v) !== null;
 }
+
+export const E2EE_EVENT = "teacher-e2ee-change";
+export function notifyE2eeChange() {
+  window.dispatchEvent(new Event(E2EE_EVENT));
+}
