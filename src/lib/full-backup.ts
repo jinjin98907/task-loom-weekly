@@ -4,9 +4,10 @@ export const BACKUP_KEYS = {
   yearly: "teacher-yearly-timetable-v1",
   rules: "teacher-yearly-color-rules-v1",
   myClass: "teacher-my-class-v1",
+  memo: "teacher-memos-v2",
 } as const;
 
-type Obj = { app?: unknown; dashboard?: unknown; yearly?: unknown; rules?: unknown; myClass?: unknown; cells?: unknown; [k: string]: unknown };
+type Obj = { app?: unknown; dashboard?: unknown; yearly?: unknown; rules?: unknown; myClass?: unknown; memo?: unknown; cells?: unknown; [k: string]: unknown };
 const isObj = (v: unknown): v is Obj => !!v && typeof v === "object" && !Array.isArray(v);
 const read = (s: Pick<Storage, "getItem">, k: string, fb: unknown) => {
   try { const r = s.getItem(k); return r == null ? fb : JSON.parse(r); } catch { return fb; }
@@ -21,6 +22,7 @@ export function buildFullBackup(s: Pick<Storage, "getItem">, now = new Date()) {
     yearly: read(s, BACKUP_KEYS.yearly, {}),
     rules: read(s, BACKUP_KEYS.rules, []),
     myClass: Number(read(s, BACKUP_KEYS.myClass, 0)) || 0,
+    memo: read(s, BACKUP_KEYS.memo, []),
   };
 }
 
@@ -32,6 +34,7 @@ export function parseFullBackup(d: unknown): Partial<Record<keyof typeof BACKUP_
     if (isObj(d.dashboard)) out.dashboard = JSON.stringify(d.dashboard);
     if (isObj(d.yearly)) out.yearly = JSON.stringify(d.yearly);
     if (Array.isArray(d.rules)) out.rules = JSON.stringify(d.rules);
+    if (Array.isArray(d.memo)) out.memo = JSON.stringify(d.memo);
     if (d.myClass !== undefined) out.myClass = String([0, 1, 2].includes(Number(d.myClass)) ? Number(d.myClass) : 0);
     return out;
   }
