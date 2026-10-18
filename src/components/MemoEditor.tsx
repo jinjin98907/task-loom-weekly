@@ -12,7 +12,6 @@ export function MemoEditor() {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"edit" | "view">("edit");
   const [closed, setClosed] = useState<Set<number>>(new Set());
-  const [showTree, setShowTree] = useState(true);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -104,29 +103,6 @@ export function MemoEditor() {
     if (i < 0) return "";
     return (i > 15 ? "…" : "") + m.text.slice(Math.max(0, i - 15), i + 40).replace(/\n/g, " ");
   };
-
-  const renderTree = (parentId: string | undefined, depth: number): React.ReactNode =>
-    memos.filter((m) => (m.parentId ?? undefined) === parentId).map((m) => {
-      const kids = memos.some((x) => x.parentId === m.id);
-      const on = m.id === active?.id;
-      return (
-        <div key={m.id}>
-          <div className={`group flex items-center rounded text-xs ${on ? "bg-sky-soft text-primary" : "text-foreground hover:bg-sky-soft/60"}`}
-            style={{ paddingLeft: depth * 12 }}>
-            <button onClick={() => kids && patch(m.id, { closed: !m.closed })}
-              className={`w-4 shrink-0 text-[10px] text-muted-foreground ${kids ? "" : "invisible"}`} aria-label="접기/펼치기">
-              {m.closed ? "▶" : "▼"}
-            </button>
-            <button onClick={() => setActiveId(m.id)} className="min-w-0 flex-1 truncate py-1 text-left">
-              📄 {m.title || "제목 없음"}
-            </button>
-            <button onClick={() => add(m.id)} title="하위 페이지 추가" className="px-1 opacity-0 group-hover:opacity-70 hover:!opacity-100">＋</button>
-            <button onClick={() => remove(m.id)} title="지우기" className="px-1 opacity-0 group-hover:opacity-70 hover:!opacity-100">✕</button>
-          </div>
-          {kids && !m.closed && renderTree(m.id, depth + 1)}
-        </div>
-      );
-    });
 
   const rows = active ? visibleLines(parseLines(active.text), closed) : [];
 
