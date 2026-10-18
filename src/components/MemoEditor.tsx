@@ -13,7 +13,7 @@ export function MemoEditor() {
       const list = loadMemos(localStorage);
       const safe = list.length ? list : [{ id: newMemoId(), title: "메모 1", text: "" }];
       setMemos(safe);
-      setActiveId((cur) => (safe.some((m) => m.id === cur) ? cur : safe[0].id));
+      setActiveId((cur) => (safe.some((m) => m.id === cur) ? cur : safe[0]!.id));
     };
     load();
     setReady(true);
@@ -44,7 +44,7 @@ export function MemoEditor() {
     const next = memos.filter((x) => x.id !== id);
     const safe = next.length ? next : [{ id: newMemoId(), title: "메모 1", text: "" }];
     save(safe);
-    if (id === activeId) setActiveId(safe[0].id);
+    if (id === activeId) setActiveId(safe[0]!.id);
   };
 
   return (
