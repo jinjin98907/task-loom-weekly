@@ -14,6 +14,7 @@ import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as MemoRouteImport } from './routes/memo'
+import { Route as MemoFullRouteImport } from './routes/memo-full'
 import { Route as YearlyRouteImport } from './routes/yearly'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +42,11 @@ const MemoRoute = MemoRouteImport.update({
   path: '/memo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MemoFullRoute = MemoFullRouteImport.update({
+  id: '/memo-full',
+  path: '/memo-full',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const YearlyRoute = YearlyRouteImport.update({
   id: '/yearly',
   path: '/yearly',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
   '/memo': typeof MemoRoute
+  '/memo-full': typeof MemoFullRoute
   '/yearly': typeof YearlyRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
   '/memo': typeof MemoRoute
+  '/memo-full': typeof MemoFullRoute
   '/yearly': typeof YearlyRoute
 }
 export interface FileRoutesById {
@@ -70,13 +78,28 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
   '/memo': typeof MemoRoute
+  '/memo-full': typeof MemoFullRoute
   '/yearly': typeof YearlyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/attendance' | '/auth' | '/calendar' | '/memo' | '/yearly'
+  fullPaths:
+    | '/'
+    | '/attendance'
+    | '/auth'
+    | '/calendar'
+    | '/memo'
+    | '/memo-full'
+    | '/yearly'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/attendance' | '/auth' | '/calendar' | '/memo' | '/yearly'
+  to:
+    | '/'
+    | '/attendance'
+    | '/auth'
+    | '/calendar'
+    | '/memo'
+    | '/memo-full'
+    | '/yearly'
   id:
     | '__root__'
     | '/'
@@ -84,6 +107,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/calendar'
     | '/memo'
+    | '/memo-full'
     | '/yearly'
   fileRoutesById: FileRoutesById
 }
@@ -93,6 +117,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CalendarRoute: typeof CalendarRoute
   MemoRoute: typeof MemoRoute
+  MemoFullRoute: typeof MemoFullRoute
   YearlyRoute: typeof YearlyRoute
 }
 
@@ -133,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/memo-full': {
+      id: '/memo-full'
+      path: '/memo-full'
+      fullPath: '/memo-full'
+      preLoaderRoute: typeof MemoFullRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/yearly': {
       id: '/yearly'
       path: '/yearly'
@@ -149,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CalendarRoute: CalendarRoute,
   MemoRoute: MemoRoute,
+  MemoFullRoute: MemoFullRoute,
   YearlyRoute: YearlyRoute,
 }
 export const routeTree = rootRouteImport
