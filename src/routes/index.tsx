@@ -7,7 +7,7 @@ import { subjectFit } from "@/lib/subject-fit";
 
 import { useEffect, useMemo, useState } from "react";
 import { type Attendance, emptyAttendance, normalizeAttendance } from "@/lib/attendance";
-import { AttendanceEntries } from "@/components/AttendanceEntries";
+import { AttendanceCompact } from "@/components/AttendanceCompact";
 import { normalizeNotices, type Todo } from "@/lib/day-data";
 import { normalizeRules, styleFor, type ColorRule } from "@/lib/keyword-colors";
 import { cellKey, MY_CLASS_KEY, normalizeClass, setSubject, subjectFor, YEARLY_KEY, type YCells } from "@/lib/class-sync";
@@ -199,11 +199,7 @@ function Dashboard() {
         <Row label="👤 출결" cols={cols}>
           {days.map((d) => { const k = keyOf(d); const a = get(k).attendance; return (
             <Cell key={k} today={k === todayKey}>
-              <div className="space-y-1.5">
-                <AttendanceEntries label="결석" names={a.absent} reasons={a.absentReason} onChange={(n, r) => update(k, (x) => ({ ...x, attendance: { ...x.attendance, absent: n, absentReason: r } }))} />
-                <AttendanceEntries label="지각" names={a.late} reasons={a.lateReason} onChange={(n, r) => update(k, (x) => ({ ...x, attendance: { ...x.attendance, late: n, lateReason: r } }))} />
-                <AttendanceEntries label="체험학습" names={a.trip} reasons={a.tripReason} onChange={(n, r) => update(k, (x) => ({ ...x, attendance: { ...x.attendance, trip: n, tripReason: r } }))} />
-              </div>
+              <AttendanceCompact value={a} onChange={(na) => update(k, (x) => ({ ...x, attendance: na }))} />
             </Cell>
           ); })}
         </Row>
