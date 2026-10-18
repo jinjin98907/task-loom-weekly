@@ -21,3 +21,9 @@ export function subjectFit(text: string, charsPerLine?: number): SubjectFit {
   const rows = lines.reduce((n, line) => n + Math.max(1, Math.ceil(line.length / cpl)), 0);
   return { fontClass: tier.fontClass, charsPerLine: cpl, rows: Math.min(MAX_SUBJECT_ROWS, Math.max(1, rows)) };
 }
+
+// 모바일 연간 시간표의 아주 좁은 칸: 글자 수에 맞춰 칸을 꽉 채우는 글씨 크기(px).
+export function tinyCellFontPx(text: string, cellPx = 24): number {
+  const len = Math.max(1, String(text ?? "").length);
+  return Math.max(6, Math.min(13, Math.floor((cellPx - 2) / len)));
+}
