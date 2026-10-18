@@ -32,7 +32,7 @@ export function AppTabs() {
       </Link>
       <Link
         to="/auth"
-        className={`ml-auto -mb-px rounded-t-lg border border-transparent px-4 py-2 text-sm font-semibold hover:bg-sky-soft ${signedIn ? "text-primary" : "text-muted-foreground"}`}
+        className={`-mb-px rounded-t-lg border border-transparent px-4 py-2 text-sm font-semibold hover:bg-sky-soft ${signedIn ? "text-primary" : "text-muted-foreground"}`}
       >
         ☁️ {signedIn ? "동기화 켜짐" : "로그인"}
       </Link>
