@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -123,15 +124,23 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const bare = pathname.replace(/\/+$/, "").endsWith("/memo-full");
 
   return (
     <QueryClientProvider client={queryClient}>
       <CloudSync>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <MemoSplit>
+        {bare ? (
           <Outlet />
-        </MemoSplit>
-        <HistoryControls />
+        ) : (
+          <>
+            <MemoSplit>
+              <Outlet />
+            </MemoSplit>
+            <HistoryControls />
+          </>
+        )}
       </CloudSync>
     </QueryClientProvider>
   );
