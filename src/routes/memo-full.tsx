@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MemoEditor } from "@/components/MemoEditor";
+import { useAccount } from "@/components/CloudSync";
 
 export const Route = createFileRoute("/memo-full")({
   head: () => ({
@@ -16,8 +17,20 @@ export const Route = createFileRoute("/memo-full")({
 });
 
 function MemoFullPage() {
+  const { user, loading } = useAccount();
   return (
     <div className="flex h-dvh flex-col bg-background">
+      <div className="flex justify-end border-b border-sky-mid px-3 py-1">
+        <a
+          href="/auth"
+          target="_blank"
+          rel="noopener"
+          title={user ? "로그인 정보 보기" : "로그인하면 다른 기기와 메모가 연동돼요"}
+          className={`rounded-md px-3 py-1 text-xs font-semibold hover:bg-sky-soft ${user ? "text-primary" : "text-muted-foreground"}`}
+        >
+          ☁️ {loading ? "확인 중…" : user ? `동기화 켜짐 (${user.email ?? ""})` : "로그인"}
+        </a>
+      </div>
       <MemoEditor />
     </div>
   );
