@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppTabs } from "@/components/AppTabs";
 import { ALL_KEYS, dateKey, monthGrid, nextTag, type TodoTag } from "@/lib/calendar";
+import { insertNewlineAtCursor } from "@/lib/textarea-newline";
 
 export const Route = createFileRoute("/calendar")({
   head: () => ({
@@ -134,7 +135,7 @@ function DayEditor({ k, todos, onChange, onClose }: { k: string; todos: Todo[]; 
               <input type="checkbox" className="mt-1 accent-sky-strong" checked={t.done} onChange={() => onChange((l) => l.map((x) => x.id === t.id ? { ...x, done: !x.done } : x))} />
               {editing === t.id ? (
                 <textarea autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={() => save(t.id)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); save(t.id); } }} className="flex-1 rounded border border-sky-mid bg-background p-1 text-foreground" />
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (e.altKey) insertNewlineAtCursor(e.currentTarget, setDraft); else save(t.id); } }} className="flex-1 rounded border border-sky-mid bg-background p-1 text-foreground" />
               ) : (
                 <span onDoubleClick={() => { setEditing(t.id); setDraft(t.text); }} className={`flex-1 whitespace-pre-wrap ${t.done ? "line-through opacity-50" : ""}`}>{t.text}</span>
               )}
@@ -144,8 +145,8 @@ function DayEditor({ k, todos, onChange, onClose }: { k: string; todos: Todo[]; 
             </li>
           ))}
         </ul>
-        <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="새 업무 (Enter 추가, Shift+Enter 줄바꿈)"
-          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); add(); } }}
+        <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="새 업무 (Enter 추가, Alt+Enter 줄바꿈)"
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (e.altKey) insertNewlineAtCursor(e.currentTarget, setText); else add(); } }}
           className="w-full rounded border border-sky-mid bg-background p-2 text-sm" rows={2} />
         <button onClick={add} className="mt-2 w-full rounded-lg bg-primary py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90">추가</button>
       </div>

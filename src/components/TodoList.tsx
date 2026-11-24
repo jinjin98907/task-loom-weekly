@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { newTodoId, type Todo } from "@/lib/day-data";
+import { insertNewlineAtCursor } from "@/lib/textarea-newline";
 
 type Props = {
   items: Todo[];
@@ -9,7 +10,7 @@ type Props = {
 
 /**
  * 체크사항·안내사항 공용 투두리스트.
- * Enter로 추가, Shift+Enter 줄바꿈, 더블클릭·✎ 수정, ✕ 삭제.
+ * Enter로 추가, Alt+Enter 줄바꿈, 더블클릭·✎ 수정, ✕ 삭제.
  */
 export function TodoList({ items, onChange, placeholder }: Props) {
   const [draft, setDraft] = useState("");
@@ -36,7 +37,14 @@ export function TodoList({ items, onChange, placeholder }: Props) {
           {editing === t.id ? (
             <textarea autoFocus value={editText} rows={Math.max(2, editText.split("\n").length)}
               onChange={(e) => setEditText(e.target.value)} onBlur={() => save(t.id)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); save(t.id); } if (e.key === "Escape") setEditing(null); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  if (e.altKey) insertNewlineAtCursor(e.currentTarget, setEditText);
+                  else save(t.id);
+                }
+                if (e.key === "Escape") setEditing(null);
+              }}
               className="flex-1 resize-none rounded border border-input p-1 text-sm outline-none" />
           ) : (
             <p onDoubleClick={() => { setEditing(t.id); setEditText(t.text); }}
@@ -49,7 +57,13 @@ export function TodoList({ items, onChange, placeholder }: Props) {
         </div>
       ))}
       <textarea value={draft} rows={Math.max(1, draft.split("\n").length)} onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); add(); } }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            if (e.altKey) insertNewlineAtCursor(e.currentTarget, setDraft);
+            else add();
+          }
+        }}
         placeholder={placeholder}
         className="w-full resize-none rounded-lg border border-dashed border-sky-mid bg-transparent p-1.5 text-sm outline-none focus:border-solid focus:ring-2 focus:ring-ring" />
     </div>

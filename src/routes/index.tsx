@@ -188,20 +188,20 @@ function Dashboard() {
 
         <Row label="✅ 체크사항" cols={cols}>
           {days.map((d) => { const k = keyOf(d); return (
-            <Cell key={k} today={k === todayKey}><TodoList items={get(k).todos} onChange={(fn) => update(k, (x) => ({ ...x, todos: fn(x.todos) }))} placeholder="+ 업무 추가 (Shift+Enter 줄바꿈)" /></Cell>
+            <Cell key={k} today={k === todayKey}><TodoList items={get(k).todos} onChange={(fn) => update(k, (x) => ({ ...x, todos: fn(x.todos) }))} placeholder="+ 업무 추가 (Alt+Enter 줄바꿈)" /></Cell>
           ); })}
         </Row>
 
         <Row label="⏰ 기억해야 하는 시간" cols={cols}>
           {days.map((d) => { const k = keyOf(d); return (
-            <Cell key={k} today={k === todayKey}><TodoList items={get(k).times ?? []} onChange={(fn) => update(k, (x) => ({ ...x, times: fn(x.times ?? []) }))} placeholder="+ 시간 추가 (Shift+Enter 줄바꿈)" /></Cell>
+            <Cell key={k} today={k === todayKey}><TodoList items={get(k).times ?? []} onChange={(fn) => update(k, (x) => ({ ...x, times: fn(x.times ?? []) }))} placeholder="+ 시간 추가 (Alt+Enter 줄바꿈)" /></Cell>
           ); })}
         </Row>
 
         <Row label="📢 안내사항" cols={cols}>
           {days.map((d) => { const k = keyOf(d); return (
             <Cell key={k} today={k === todayKey}>
-              <TodoList items={get(k).notices} onChange={(fn) => update(k, (x) => ({ ...x, notices: fn(x.notices) }))} placeholder="+ 안내 추가 (Shift+Enter 줄바꿈)" />
+              <TodoList items={get(k).notices} onChange={(fn) => update(k, (x) => ({ ...x, notices: fn(x.notices) }))} placeholder="+ 안내 추가 (Alt+Enter 줄바꿈)" />
             </Cell>
           ); })}
         </Row>
