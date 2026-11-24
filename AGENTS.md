@@ -11,6 +11,8 @@
 
 ## Rules
 
+- Store per-student attendance documents as optional arrays aligned with legacy name/reason lines, and transform them together in browser-safe attendance helpers. Why: old records remain compatible and removing a student cannot shift another student's document status.
+
 - Keep pure date, ordering and timetable rules in small browser-safe modules under `src/lib/` and unit-test them there instead of through a route. Why: route modules pull in TanStack Router and server-only code, which makes the rules hard to check on their own.
 - Attendance reports read the existing dashboard LocalStorage records without creating a separate attendance store. Why: period views must remain synchronized and must not overwrite teacher records.
 - Cloud sync keeps LocalStorage as the primary store: pages keep reading/writing their LocalStorage keys directly, and `src/lib/cloud-sync-client.ts` only mirrors those keys to the `user_data` cloud table (merge rules in `src/lib/cloud-merge.ts`). Why: offline and NAS self-hosting must keep working, and pages stay decoupled from the network.

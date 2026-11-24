@@ -5,6 +5,8 @@ export type Attendance = {
   absentReason: string;
   lateReason: string;
   tripReason: string;
+  absentDocuments?: StudentDocuments[];
+  tripDocuments?: StudentDocuments[];
 };
 
 export const emptyAttendance = (): Attendance => ({
@@ -26,9 +28,41 @@ export const normalizeAttendance = (a: Partial<Attendance> | undefined): Attenda
   absentReason: str(a?.absentReason),
   lateReason: str(a?.lateReason),
   tripReason: str(a?.tripReason),
+  ...(Array.isArray(a?.absentDocuments) ? { absentDocuments: a.absentDocuments.map(normalizeDocuments) } : {}),
+  ...(Array.isArray(a?.tripDocuments) ? { tripDocuments: a.tripDocuments.map(normalizeDocuments) } : {}),
 });
 
-export type StudentEntry = { name: string; reason: string };
+export type StudentDocuments = Partial<Record<"absenceForm" | "additional" | "application" | "report", boolean>>;
+export type StudentEntry = { name: string; reason: string; documents?: StudentDocuments };
+
+function normalizeDocuments(value: unknown): StudentDocuments {
+  if (!value || typeof value !== "object") return {};
+  const source = value as Record<string, unknown>;
+  return Object.fromEntries(["absenceForm", "additional", "application", "report"].filter((key) => typeof source[key] === "boolean").map((key) => [key, source[key]]));
+}
+
+export const ATTENDANCE_KINDS = [
+  { label: "결석", n: "absent", r: "absentReason", documents: "absentDocuments", forms: [{ key: "absenceForm", label: "결석계", optional: false }, { key: "additional", label: "추가서류", optional: true }] },
+  { label: "지각", n: "late", r: "lateReason", documents: null, forms: [] },
+  { label: "체험학습", n: "trip", r: "tripReason", documents: "tripDocuments", forms: [{ key: "application", label: "신청서", optional: false }, { key: "report", label: "보고서", optional: false }] },
+] as const;
+export type AttendanceKind = (typeof ATTENDANCE_KINDS)[number];
+
+export function attendanceEntries(value: Attendance, kind: AttendanceKind): StudentEntry[] {
+  const documents = kind.documents ? value[kind.documents] : undefined;
+  return toEntries(value[kind.n], value[kind.r]).map((entry, i) => ({ ...entry, ...(documents?.[i] ? { documents: documents[i] } : {}) }));
+}
+
+export function setAttendanceEntries(value: Attendance, kind: AttendanceKind, entries: StudentEntry[]): Attendance {
+  const clean = [...entries];
+  while (clean.length && !clean.at(-1)?.name && !clean.at(-1)?.reason) clean.pop();
+  const lines = fromEntries(clean);
+  return { ...value, [kind.n]: lines.names, [kind.r]: lines.reasons, ...(kind.documents ? { [kind.documents]: clean.map((entry) => normalizeDocuments(entry.documents)) } : {}) };
+}
+
+export function documentSummary(entry: StudentEntry, kind: AttendanceKind): string {
+  return kind.forms.flatMap((form) => entry.documents?.[form.key] ? [`${form.label} 제출`] : form.optional ? [] : [`${form.label} 미제출`]).join(" · ");
+}
 
 /** 이름·사유 칸은 줄 단위로 짝을 이룬다 (n번째 줄 이름 ↔ n번째 줄 사유). */
 export const toEntries = (names: string, reasons: string): StudentEntry[] => {

@@ -1,4 +1,4 @@
-import { toEntries } from "@/lib/attendance";
+import { ATTENDANCE_KINDS, attendanceEntries, documentSummary } from "@/lib/attendance";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Users } from "lucide-react";
@@ -96,15 +96,11 @@ function AttendancePage() {
               <tbody>
                 {rows.map((row) => {
                   const day = new Date(Number(row.date.slice(0, 4)), Number(row.date.slice(5, 7)) - 1, Number(row.date.slice(8, 10)));
-                  const cols = [
-                    { name: row.absent, reason: row.absentReason },
-                    { name: row.late, reason: row.lateReason },
-                    { name: row.trip, reason: row.tripReason },
-                  ];
+                  const cols = ATTENDANCE_KINDS;
                   return <tr key={row.date} className="border-b border-sky-mid/60 hover:bg-sky-soft/30">
                     <th scope="row" className="px-2 py-4 text-left align-top font-medium text-secondary-foreground md:px-4"><time dateTime={row.date}>{row.date}<span className="mt-1 block text-xs text-muted-foreground">({"일월화수목금토"[day.getDay()]})</span></time></th>
                     {cols.map((col, i) => <td key={i} className="whitespace-pre-wrap break-words px-2 py-4 align-top text-foreground md:px-4">
-                      {col.name.trim() ? <ul className="space-y-1">{toEntries(col.name, col.reason).filter((e) => e.name.trim() || e.reason.trim()).map((e, j) => <li key={j}>{e.name}{e.reason.trim() && <span className="ml-1 text-xs text-muted-foreground">({e.reason})</span>}</li>)}</ul> : <span className="text-muted-foreground">—</span>}
+                      {row[col.n].trim() ? <ul className="space-y-2">{attendanceEntries(row, col).filter((e) => e.name.trim() || e.reason.trim()).map((e, j) => <li key={j}>{e.name}{e.reason.trim() && <span className="ml-1 text-xs text-muted-foreground">({e.reason})</span>}{col.forms.length > 0 && <span className="mt-1 block text-xs text-primary">{documentSummary(e, col)}</span>}</li>)}</ul> : <span className="text-muted-foreground">—</span>}
                     </td>)}
                   </tr>;
                 })}
